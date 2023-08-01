@@ -5,7 +5,7 @@ module "ansible-playbooks" {
 
 module "arch-installation" {
   source          = "./modules/public_repo"
-  repository_name = "Arch_installation"
+  repository_name = "arch-installation"
 }
 
 module "archmirror-rsync-client" {
@@ -30,7 +30,7 @@ module "dependatest" {
 
 module "dotfiles" {
   source                 = "./modules/public_repo"
-  repository_name        = ".dotfiles"
+  repository_name        = "dotfiles"
   repository_description = "Personal dotfiles for Linux"
 }
 
@@ -61,17 +61,17 @@ module "kubernetes-presentation" {
 
 module "py-camp-rps" {
   source          = "./modules/public_repo"
-  repository_name = "PyCamp-rps"
+  repository_name = "py-camp-rps"
 }
 
 module "razer-viper-ultimate" {
   source          = "./modules/public_repo"
-  repository_name = "Razer-Viper-Ultimate"
+  repository_name = "razer-viper-ultimate"
 }
 
 module "recetas" {
   source          = "./modules/public_repo"
-  repository_name = "Recetas"
+  repository_name = "recetas"
 }
 
 module "rsync" {
