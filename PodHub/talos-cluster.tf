@@ -36,7 +36,8 @@ resource "talos_machine_configuration_apply" "controlplane" {
     templatefile("${path.module}/templates/cilium.tftpl", { cilium_manifest = indent(8, data.helm_template.cilium.manifest) }),
     file("${path.module}/patches/VIP.yaml"),
     file("${path.module}/patches/control-plane-label.yaml"),
-    file("${path.module}/patches/cilium.yaml")
+    file("${path.module}/patches/cilium.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
   ]
 }
 
@@ -50,7 +51,8 @@ resource "talos_machine_configuration_apply" "raspberries" {
       hostname = each.value.hostname
       disk     = each.value.disk
     }),
-    file("${path.module}/patches/cilium.yaml")
+    file("${path.module}/patches/cilium.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
   ]
 }
 
@@ -65,7 +67,23 @@ resource "talos_machine_configuration_apply" "N100s" {
       disk     = each.value.disk
     }),
     file("${path.module}/patches/iGPU-extension.yaml"),
-    file("${path.module}/patches/cilium.yaml")
+    file("${path.module}/patches/cilium.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
+  ]
+}
+
+resource "talos_machine_configuration_apply" "masita" {
+  client_configuration        = talos_machine_secrets.secrets.client_configuration
+  machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
+  for_each                    = var.masita
+  node                        = each.key
+  config_patches = [
+    templatefile("${path.module}/templates/installation.tftpl", {
+      hostname = each.value.hostname
+      disk     = each.value.disk
+    }),
+    file("${path.module}/patches/cilium.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
   ]
 }
 

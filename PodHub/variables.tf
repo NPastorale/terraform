@@ -46,3 +46,11 @@ variable "N100s" {
     hostname = string
   }))
 }
+
+variable "masita" {
+  description = "A map of masita data"
+  type = map(object({
+    disk     = string
+    hostname = string
+  }))
+}

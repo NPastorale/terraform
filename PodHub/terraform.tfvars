@@ -1,8 +1,8 @@
 cluster_name          = "podhub"
 cluster_endpoint_host = "podhub.nahue.ar"
 cluster_endpoint_port = "6443"
-talos_version         = "v1.4.6"
-kubernetes_version    = "v1.27.3"
+talos_version         = "v1.4.7"
+kubernetes_version    = "v1.27.4"
 
 controlplanes = {
   "192.168.1.11" = {
@@ -38,5 +38,12 @@ N100s = {
   "192.168.1.31" = {
     disk     = "/dev/sda"
     hostname = "xenial-underling-2"
+  }
+}
+
+masita = {
+  "192.168.1.96" = {
+    disk     = "/dev/mmcblk0"
+    hostname = "macabre-underling-1"
   }
 }
