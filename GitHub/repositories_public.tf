@@ -104,3 +104,8 @@ module "workflows" {
   source          = "./modules/public_repo"
   repository_name = "workflows"
 }
+
+module "scripts" {
+  source          = "./modules/public_repo"
+  repository_name = "scripts"
+}
