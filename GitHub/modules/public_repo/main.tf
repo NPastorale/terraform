@@ -9,6 +9,7 @@ terraform {
 resource "github_repository" "repository" {
   name                   = var.repository_name
   description            = var.repository_description
+  archived               = var.archived
   visibility             = "public"
   auto_init              = true
   delete_branch_on_merge = true
