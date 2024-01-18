@@ -1,4 +1,5 @@
 module "obsidian" {
-  source          = "./modules/private_repo"
+  source          = "./modules/repository"
   repository_name = "obsidian"
+  visibility      = "private"
 }

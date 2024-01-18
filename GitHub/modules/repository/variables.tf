@@ -9,6 +9,18 @@ variable "repository_description" {
   default     = ""
 }
 
+variable "archived" {
+  type        = string
+  description = "The archived status"
+  default     = false
+}
+
+variable "visibility" {
+  type        = string
+  description = "Whether the repository is private or public"
+  default     = "public"
+}
+
 variable "actions_secrets" {
   type        = map(any)
   description = "A map of secrets for the repository"

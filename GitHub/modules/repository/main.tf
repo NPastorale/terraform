@@ -10,7 +10,7 @@ resource "github_repository" "repository" {
   name                   = var.repository_name
   description            = var.repository_description
   archived               = var.archived
-  visibility             = "public"
+  visibility             = var.visibility
   auto_init              = true
   delete_branch_on_merge = true
   allow_auto_merge       = true
@@ -52,6 +52,8 @@ resource "github_branch_default" "default" {
 
 resource "github_branch_protection" "main_protection" {
   repository_id = github_repository.repository.node_id
+
+  count = var.visibility == "public" ? 1 : 0
 
   pattern                         = github_branch.main.branch
   enforce_admins                  = false
