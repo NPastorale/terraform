@@ -55,15 +55,3 @@ module "workflows" {
   repository_name        = "workflows"
   repository_description = "Reusable GitHub Actions Workflows"
 }
-
-module "renovate-test-kubernetes" {
-  source          = "./modules/repository"
-  repository_name = "renovate-test-kubernetes"
-  main_force_push = true
-}
-
-module "renovate-test-docker" {
-  source          = "./modules/repository"
-  repository_name = "renovate-test-docker"
-  main_force_push = true
-}
