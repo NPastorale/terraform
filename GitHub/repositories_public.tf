@@ -56,12 +56,6 @@ module "workflows" {
   repository_description = "Reusable GitHub Actions Workflows"
 }
 
-module "renovate-test-terraform" {
-  source          = "./modules/repository"
-  repository_name = "renovate-test-terraform"
-  main_force_push = true
-}
-
 module "renovate-test-kubernetes" {
   source          = "./modules/repository"
   repository_name = "renovate-test-kubernetes"
