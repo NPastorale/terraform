@@ -62,7 +62,7 @@ resource "github_branch_protection" "main_protection" {
   required_linear_history         = true
   require_conversation_resolution = true
   allows_deletions                = false
-  allows_force_pushes             = false
+  allows_force_pushes             = var.main_force_push
 
   required_status_checks {
     strict   = true

@@ -38,3 +38,9 @@ variable "status_checks" {
   description = "A list of required status checks"
   default     = []
 }
+
+variable "main_force_push" {
+  type        = bool
+  description = "Allows force pushes to the main branch"
+  default     = false
+}
