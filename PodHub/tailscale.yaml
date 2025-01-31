@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peronia
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: peronia
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: peronia
+    spec:
+      serviceAccountName: secret-access-sa
+      nodeName: macabre-underling-2
+      containers:
+        - image: tailscale/tailscale
+          name: peronia
+          env:
+            - name: "TS_AUTHKEY"
+              value: "tskey-auth-"
+            - name: "TS_EXTRA_ARGS"
+              value: "--advertise-exit-node"
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+      tolerations:
+        - key: "location"
+          operator: "Equal"
+          value: "Argentina"
+          effect: "NoSchedule"

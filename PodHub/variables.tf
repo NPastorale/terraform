@@ -52,5 +52,11 @@ variable "masita" {
   type = map(object({
     disk     = string
     hostname = string
+    taints   = map(string)
+    location = object({
+      continent = string
+      country   = string
+      city      = string
+    })
   }))
 }

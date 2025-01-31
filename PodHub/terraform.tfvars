@@ -1,49 +1,57 @@
 cluster_name          = "podhub"
 cluster_endpoint_host = "podhub.nahue.ar"
 cluster_endpoint_port = "6443"
-talos_version         = "v1.4.7"
-kubernetes_version    = "v1.27.4"
+talos_version         = "v1.7.5"
+kubernetes_version    = "v1.30.2"
 
 controlplanes = {
-  "192.168.1.11" = {
+  "10.10.20.11" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-1"
   },
-  "192.168.1.12" = {
+  "10.10.20.12" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-2"
   },
-  "192.168.1.13" = {
+  "10.10.20.13" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-3"
   }
 }
 
 raspberries = {
-  "192.168.1.14" = {
+  "10.10.20.21" = {
     disk     = "/dev/mmcblk0"
     hostname = "abysmal-underling-1"
   },
-  "192.168.1.15" = {
+  "10.10.20.22" = {
     disk     = "/dev/mmcblk0"
     hostname = "abysmal-underling-2"
   }
 }
 
 N100s = {
-  # "192.168.1.30" = {
-  #   disk     = "/dev/sda"
-  #   hostname = "xenial-underling-1"
-  # },
-  "192.168.1.31" = {
+  "10.10.20.31" = {
+    disk     = "/dev/sda"
+    hostname = "xenial-underling-1"
+  },
+  "10.10.20.32" = {
     disk     = "/dev/sda"
     hostname = "xenial-underling-2"
   }
 }
 
 masita = {
-  "192.168.1.96" = {
+  "192.168.100.48" = {
     disk     = "/dev/mmcblk0"
     hostname = "macabre-underling-1"
+    taints = {
+      "location" = "Argentina:NoSchedule"
+    }
+    location = {
+      continent = "SA"
+      country   = "AR"
+      city      = "Rosario"
+    }
   }
 }

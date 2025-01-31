@@ -2,3 +2,4 @@
   path: /machine/network/kubespan
   value:
     enabled: true
+    harvestExtraEndpoints: true

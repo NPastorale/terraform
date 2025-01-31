@@ -1,15 +1,17 @@
 data "helm_template" "cilium" {
-  name       = "cilium"
-  repository = "https://helm.cilium.io/"
-  chart      = "cilium"
-  namespace  = "kube-system"
+  name         = "cilium"
+  repository   = "https://helm.cilium.io/"
+  kube_version = var.kubernetes_version
+  version      = "1.16.0"
+  chart        = "cilium"
+  namespace    = "kube-system"
   set {
     name  = "ipam.mode"
     value = "kubernetes"
   }
   set {
     name  = "kubeProxyReplacement"
-    value = "strict"
+    value = "true"
   }
   set_list {
     name  = "securityContext.capabilities.ciliumAgent"
@@ -29,10 +31,31 @@ data "helm_template" "cilium" {
   }
   set {
     name  = "k8sServiceHost"
-    value = var.cluster_endpoint_host
+    value = "localhost" #Set to localhost if KubePrism is enabled, var.cluster_endpoint_host otherwise
   }
   set {
     name  = "k8sServicePort"
-    value = var.cluster_endpoint_port
+    value = 7445 #Set to 7445 if KubePrism is enabled, var.cluster_endpoint_port otherwise
+  }
+  set {
+    name  = "clustermesh.apiserver.tls.auto.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "hubble.tls.auto.enabled"
+    value = "false"
+  }
+  set {
+    name  = "tls.ca.cert"
+    value = base64encode(tls_self_signed_cert.ca_cert.cert_pem)
+  }
+  set {
+    name  = "hubble.tls.server.cert"
+    value = base64encode(tls_locally_signed_cert.server_cert.cert_pem)
+  }
+  set {
+    name  = "hubble.tls.server.key"
+    value = base64encode(tls_private_key.server_key.private_key_pem)
   }
 }

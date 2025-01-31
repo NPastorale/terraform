@@ -1,0 +1,14 @@
+cluster:
+  inlineManifests:
+    - name: cilium
+      contents: |
+        ${cilium_manifest}
+    - name: argocd-namespace
+      contents: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: argocd
+    - name: argocd
+      contents: |
+        ${argocd_manifest}

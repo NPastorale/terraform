@@ -4,7 +4,7 @@ output "talosconfig" {
 }
 
 output "kubeconfig" {
-  value     = data.talos_cluster_kubeconfig.kubeconfig.kubeconfig_raw
+  value     = talos_cluster_kubeconfig.this.kubeconfig_raw
   sensitive = true
 }
 
@@ -22,16 +22,16 @@ output "raspberries_config" {
   sensitive = true
 }
 
-output "N100s_config" {
-  value = [
-    for k in talos_machine_configuration_apply.N100s : k.machine_configuration
-  ]
-  sensitive = true
-}
+# output "N100s_config" {
+#   value = [
+#     for k in talos_machine_configuration_apply.N100s : k.machine_configuration
+#   ]
+#   sensitive = true
+# }
 
 output "masita_config" {
   value = [
-    for k in talos_machine_configuration_apply.masita : k.machine_configuration
+    for k in data.talos_machine_configuration.masita : k.machine_configuration
   ]
   sensitive = true
 }
