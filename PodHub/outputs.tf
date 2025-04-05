@@ -29,9 +29,9 @@ output "raspberries_config" {
 #   sensitive = true
 # }
 
-output "masita_config" {
-  value = [
-    for k in data.talos_machine_configuration.masita : k.machine_configuration
-  ]
-  sensitive = true
-}
+# output "masita_config" {
+#   value = [
+#     for k in data.talos_machine_configuration.masita : k.machine_configuration
+#   ]
+#   sensitive = true
+# }

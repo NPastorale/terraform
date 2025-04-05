@@ -1,8 +1,2 @@
-- op: add
-  path: /cluster/network/cni
-  value:
-    name: none
-- op: add
+- op: remove
   path: /cluster/apiServer/admissionControl
-  value:
-    disabled: true

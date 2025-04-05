@@ -1,10 +1,10 @@
-data "helm_template" "cilium" {
-  name         = "cilium"
-  repository   = "https://helm.cilium.io/"
-  kube_version = var.kubernetes_version
-  version      = "1.16.0"
-  chart        = "cilium"
-  namespace    = "kube-system"
+resource "helm_release" "cilium" {
+  depends_on = [data.talos_cluster_health.talos]
+  name       = "cilium"
+  repository = "https://helm.cilium.io/"
+  version    = "1.17.2"
+  chart      = "cilium"
+  namespace  = "kube-system"
   set {
     name  = "ipam.mode"
     value = "kubernetes"

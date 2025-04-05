@@ -1,8 +1,9 @@
-data "helm_template" "argocd" {
-  name         = "argocd"
-  repository   = "https://argoproj.github.io/argo-helm"
-  kube_version = var.kubernetes_version
-  version      = "7.3.11"
-  chart        = "argo-cd"
-  namespace    = "argocd"
+resource "helm_release" "argocd" {
+  depends_on       = [data.talos_cluster_health.kubernetes]
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  version          = "7.8.23"
+  chart            = "argo-cd"
+  namespace        = "argocd"
+  create_namespace = true
 }

@@ -1,9 +1,5 @@
 resource "talos_machine_secrets" "secrets" {
   talos_version = var.talos_version
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = all
-  }
 }
 
 data "talos_machine_configuration" "controlplane" {
@@ -39,18 +35,18 @@ resource "talos_machine_configuration_apply" "controlplane" {
   machine_configuration_input = data.talos_machine_configuration.controlplane.machine_configuration
   for_each                    = var.controlplanes
   node                        = each.key
+  on_destroy = {
+    graceful = false
+    reboot   = true
+    reset    = true
+  }
   config_patches = [
     templatefile("${path.module}/templates/installation.tftpl", {
       hostname = each.value.hostname
       disk     = each.value.disk
       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     }),
-    templatefile("${path.module}/templates/inline.tftpl", {
-      cilium_manifest = indent(8, data.helm_template.cilium.manifest),
-      argocd_manifest = indent(8, data.helm_template.argocd.manifest)
-    }),
-    file("${path.module}/patches/VIP.yaml"),
-    file("${path.module}/patches/cilium.yaml"),
+    file("${path.module}/patches/CNI.yaml"),
     file("${path.module}/patches/kubespan.yaml")
   ]
 }
@@ -60,13 +56,17 @@ resource "talos_machine_configuration_apply" "raspberries" {
   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
   for_each                    = var.raspberries
   node                        = each.key
+  on_destroy = {
+    graceful = false
+    reboot   = true
+    reset    = true
+  }
   config_patches = [
     templatefile("${path.module}/templates/installation.tftpl", {
       hostname = each.value.hostname
       disk     = each.value.disk
       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     }),
-    file("${path.module}/patches/cilium.yaml"),
     file("${path.module}/patches/kubespan.yaml")
   ]
 }
@@ -87,36 +87,35 @@ resource "talos_machine_configuration_apply" "raspberries" {
 #   ]
 # }
 
-data "talos_machine_configuration" "masita" {
-  cluster_name       = var.cluster_name
-  cluster_endpoint   = "https://10.10.20.5:${var.cluster_endpoint_port}"
-  machine_type       = "worker"
-  machine_secrets    = talos_machine_secrets.secrets.machine_secrets
-  talos_version      = var.talos_version
-  kubernetes_version = var.kubernetes_version
-  docs               = false
-  examples           = false
-  for_each           = var.masita
-  config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
-      hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
-    }),
-    templatefile("${path.module}/templates/taints.tftpl", {
-      taints = each.value.taints
-    }),
-    templatefile("${path.module}/templates/labels.tftpl", {
-      labels = each.value.labels
-    }),
-    file("${path.module}/patches/cilium.yaml"),
-    file("${path.module}/patches/kubespan.yaml")
-  ]
-}
+# data "talos_machine_configuration" "masita" {
+#   cluster_name       = var.cluster_name
+#   cluster_endpoint   = "https://10.10.20.5:${var.cluster_endpoint_port}"
+#   machine_type       = "worker"
+#   machine_secrets    = talos_machine_secrets.secrets.machine_secrets
+#   talos_version      = var.talos_version
+#   kubernetes_version = var.kubernetes_version
+#   docs               = false
+#   examples           = false
+#   for_each           = var.masita
+#   config_patches = [
+#     templatefile("${path.module}/templates/installation.tftpl", {
+#       hostname = each.value.hostname
+#       disk     = each.value.disk
+#       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+#     }),
+#     templatefile("${path.module}/templates/taints.tftpl", {
+#       taints = each.value.taints
+#     }),
+#     templatefile("${path.module}/templates/labels.tftpl", {
+#       labels = each.value.labels
+#     }),
+#     file("${path.module}/patches/cilium.yaml"),
+#     file("${path.module}/patches/kubespan.yaml")
+#   ]
+# }
 
 resource "talos_machine_bootstrap" "bootstrap" {
-  depends_on = [talos_machine_configuration_apply.controlplane]
-
+  depends_on           = [talos_machine_configuration_apply.controlplane]
   client_configuration = talos_machine_secrets.secrets.client_configuration
   node                 = [for k, v in var.controlplanes : k][0]
 }
@@ -161,9 +160,26 @@ resource "talos_image_factory_schematic" "raspberry" {
   })
 }
 
-data "talos_cluster_health" "this" {
+data "talos_cluster_health" "talos" {
+  client_configuration   = talos_machine_secrets.secrets.client_configuration
+  control_plane_nodes    = [for k, v in var.controlplanes : k]
+  endpoints              = [for k, v in var.controlplanes : k]
+  skip_kubernetes_checks = true
+  worker_nodes = concat(
+    keys(var.raspberries),
+    # keys(var.N100s),
+    # keys(var.masita),
+  )
+}
+
+data "talos_cluster_health" "kubernetes" {
+  depends_on           = [helm_release.cilium]
   client_configuration = talos_machine_secrets.secrets.client_configuration
   control_plane_nodes  = [for k, v in var.controlplanes : k]
   endpoints            = [for k, v in var.controlplanes : k]
-  worker_nodes         = [for k, v in var.raspberries : k]
+  worker_nodes = concat(
+    keys(var.raspberries),
+    # keys(var.N100s),
+    # keys(var.masita),
+  )
 }

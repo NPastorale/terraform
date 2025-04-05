@@ -39,24 +39,24 @@ variable "raspberries" {
   }))
 }
 
-variable "N100s" {
-  description = "A map of N100s data"
-  type = map(object({
-    disk     = string
-    hostname = string
-  }))
-}
+# variable "N100s" {
+#   description = "A map of N100s data"
+#   type = map(object({
+#     disk     = string
+#     hostname = string
+#   }))
+# }
 
-variable "masita" {
-  description = "A map of masita data"
-  type = map(object({
-    disk     = string
-    hostname = string
-    taints   = map(string)
-    location = object({
-      continent = string
-      country   = string
-      city      = string
-    })
-  }))
-}
+# variable "masita" {
+#   description = "A map of masita data"
+#   type = map(object({
+#     disk     = string
+#     hostname = string
+#     taints   = map(string)
+#     location = object({
+#       continent = string
+#       country   = string
+#       city      = string
+#     })
+#   }))
+# }
