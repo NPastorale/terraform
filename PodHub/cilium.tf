@@ -58,4 +58,23 @@ resource "helm_release" "cilium" {
     name  = "hubble.tls.server.key"
     value = base64encode(tls_private_key.server_key.private_key_pem)
   }
+  ############################################
+  ################## NETKIT ##################
+  ############################################
+  set {
+    name  = "bpf.datapathMode"
+    value = "netkit"
+  }
+  set {
+    name  = "bpf.masquerade"
+    value = "true"
+  }
+  set {
+    name  = "bpf.distributedLRU.enabled"
+    value = "true"
+  }
+  set {
+    name  = "bpfClockProbe"
+    value = "true"
+  }
 }

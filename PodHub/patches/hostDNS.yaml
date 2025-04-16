@@ -1,0 +1,5 @@
+- op: add
+  path: /machine/features/hostDNS
+  value:
+    enabled: true
+    forwardKubeDNSToHost: false
