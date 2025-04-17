@@ -49,7 +49,8 @@ resource "talos_machine_configuration_apply" "controlplane" {
     file("${path.module}/patches/CNI.yaml"),
     file("${path.module}/patches/hostDNS.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
-    file("${path.module}/patches/pod-security.yaml")
+    file("${path.module}/patches/pod-security.yaml"),
+    file("${path.module}/patches/registry-mirrors.yaml")
   ]
 }
 
@@ -70,7 +71,8 @@ resource "talos_machine_configuration_apply" "raspberries" {
       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     }),
     file("${path.module}/patches/hostDNS.yaml"),
-    file("${path.module}/patches/kubespan.yaml")
+    file("${path.module}/patches/kubespan.yaml"),
+    file("${path.module}/patches/registry-mirrors.yaml")
   ]
 }
 
