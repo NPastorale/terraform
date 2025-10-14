@@ -11,6 +11,13 @@ data "talos_machine_configuration" "controlplane" {
   kubernetes_version = var.kubernetes_version
   docs               = false
   examples           = false
+  config_patches = [
+    file("${path.module}/patches/CNI.yaml"),
+    file("${path.module}/patches/hostDNS.yaml"),
+    file("${path.module}/patches/kubespan.yaml"),
+    file("${path.module}/patches/pod-security.yaml"),
+    # file("${path.module}/patches/registry-mirrors.yaml")
+  ]
 }
 
 data "talos_machine_configuration" "worker" {
@@ -22,6 +29,11 @@ data "talos_machine_configuration" "worker" {
   kubernetes_version = var.kubernetes_version
   docs               = false
   examples           = false
+  config_patches = [
+    file("${path.module}/patches/hostDNS.yaml"),
+    file("${path.module}/patches/kubespan.yaml"),
+    # file("${path.module}/patches/registry-mirrors.yaml")
+  ]
 }
 
 data "talos_client_configuration" "talosconfig" {
@@ -45,12 +57,7 @@ resource "talos_machine_configuration_apply" "controlplane" {
       hostname = each.value.hostname
       disk     = each.value.disk
       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
-    }),
-    file("${path.module}/patches/CNI.yaml"),
-    file("${path.module}/patches/hostDNS.yaml"),
-    file("${path.module}/patches/kubespan.yaml"),
-    file("${path.module}/patches/pod-security.yaml"),
-    file("${path.module}/patches/registry-mirrors.yaml")
+    })
   ]
 }
 
@@ -69,10 +76,7 @@ resource "talos_machine_configuration_apply" "raspberries" {
       hostname = each.value.hostname
       disk     = each.value.disk
       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
-    }),
-    file("${path.module}/patches/hostDNS.yaml"),
-    file("${path.module}/patches/kubespan.yaml"),
-    file("${path.module}/patches/registry-mirrors.yaml")
+    })
   ]
 }
 
@@ -85,39 +89,51 @@ resource "talos_machine_configuration_apply" "raspberries" {
 #     templatefile("${path.module}/templates/installation.tftpl", {
 #       hostname = each.value.hostname
 #       disk     = each.value.disk
-#     }),
-#     # file("${path.module}/patches/iGPU-extension.yaml"),
-#     # file("${path.module}/patches/cilium.yaml"),
-#     file("${path.module}/patches/kubespan.yaml")
+#     })
 #   ]
 # }
 
-# data "talos_machine_configuration" "masita" {
-#   cluster_name       = var.cluster_name
-#   cluster_endpoint   = "https://10.10.20.5:${var.cluster_endpoint_port}"
-#   machine_type       = "worker"
-#   machine_secrets    = talos_machine_secrets.secrets.machine_secrets
-#   talos_version      = var.talos_version
-#   kubernetes_version = var.kubernetes_version
-#   docs               = false
-#   examples           = false
-#   for_each           = var.masita
-#   config_patches = [
-#     templatefile("${path.module}/templates/installation.tftpl", {
-#       hostname = each.value.hostname
-#       disk     = each.value.disk
-#       image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
-#     }),
-#     templatefile("${path.module}/templates/taints.tftpl", {
-#       taints = each.value.taints
-#     }),
-#     templatefile("${path.module}/templates/labels.tftpl", {
-#       labels = each.value.labels
-#     }),
-#     file("${path.module}/patches/cilium.yaml"),
-#     file("${path.module}/patches/kubespan.yaml")
-#   ]
-# }
+data "talos_machine_configuration" "masita" {
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
+  machine_type       = "worker"
+  machine_secrets    = talos_machine_secrets.secrets.machine_secrets
+  talos_version      = var.talos_version
+  kubernetes_version = var.kubernetes_version
+  docs               = false
+  examples           = false
+  for_each           = var.masita
+  config_patches = [
+    templatefile("${path.module}/templates/installation.tftpl", {
+      hostname = each.value.hostname
+      disk     = each.value.disk
+      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+    }),
+    file("${path.module}/patches/hostDNS.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
+  ]
+}
+
+data "talos_machine_configuration" "porteño" {
+  cluster_name       = var.cluster_name
+  cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
+  machine_type       = "worker"
+  machine_secrets    = talos_machine_secrets.secrets.machine_secrets
+  talos_version      = var.talos_version
+  kubernetes_version = var.kubernetes_version
+  docs               = false
+  examples           = false
+  for_each           = var.porteño
+  config_patches = [
+    templatefile("${path.module}/templates/installation.tftpl", {
+      hostname = each.value.hostname
+      disk     = each.value.disk
+      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+    }),
+    file("${path.module}/patches/hostDNS.yaml"),
+    file("${path.module}/patches/kubespan.yaml")
+  ]
+}
 
 resource "talos_machine_bootstrap" "bootstrap" {
   depends_on           = [talos_machine_configuration_apply.controlplane]
@@ -135,7 +151,7 @@ data "talos_image_factory_extensions_versions" "x86" {
   talos_version = var.talos_version
   filters = {
     names = [
-      "i915-ucode",
+      "i915",
       "intel-ucode"
   ] }
 }
@@ -172,9 +188,13 @@ data "talos_cluster_health" "talos" {
   skip_kubernetes_checks = true
   worker_nodes = concat(
     keys(var.raspberries),
-    # keys(var.N100s),
-    # keys(var.masita),
+    keys(var.N100s),
+    keys(var.masita),
+    keys(var.porteño),
   )
+  timeouts = {
+    read = "30s"
+  }
 }
 
 data "talos_cluster_health" "kubernetes" {
@@ -184,7 +204,8 @@ data "talos_cluster_health" "kubernetes" {
   endpoints            = [for k, v in var.controlplanes : k]
   worker_nodes = concat(
     keys(var.raspberries),
-    # keys(var.N100s),
-    # keys(var.masita),
+    keys(var.N100s),
+    keys(var.masita),
+    keys(var.porteño),
   )
 }
