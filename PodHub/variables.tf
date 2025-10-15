@@ -45,6 +45,7 @@ variable "N100s" {
     disk     = string
     hostname = string
   }))
+  default = {}
 }
 
 variable "masita" {

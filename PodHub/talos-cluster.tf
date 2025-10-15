@@ -80,18 +80,19 @@ resource "talos_machine_configuration_apply" "raspberries" {
   ]
 }
 
-# resource "talos_machine_configuration_apply" "N100s" {
-#   client_configuration        = talos_machine_secrets.secrets.client_configuration
-#   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
-#   for_each                    = var.N100s
-#   node                        = each.key
-#   config_patches = [
-#     templatefile("${path.module}/templates/installation.tftpl", {
-#       hostname = each.value.hostname
-#       disk     = each.value.disk
-#     })
-#   ]
-# }
+resource "talos_machine_configuration_apply" "N100s" {
+  client_configuration        = talos_machine_secrets.secrets.client_configuration
+  machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
+  for_each                    = var.N100s
+  node                        = each.key
+  config_patches = [
+    templatefile("${path.module}/templates/installation.tftpl", {
+      hostname = each.value.hostname
+      disk     = each.value.disk
+      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+    })
+  ]
+}
 
 data "talos_machine_configuration" "masita" {
   cluster_name       = var.cluster_name

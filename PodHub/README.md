@@ -23,7 +23,17 @@ talosctl reset \
 Delete all resources from Terraform's state
 
 ```
-
 terraform state rm $(terraform state list)
+```
 
+Get data-created configs
+
+```
+terraform output -json porteño_config | jq -r '.[0]' | yq -y > porteño.yaml
+```
+
+Get secrets
+
+```
+terraform output -raw talos_secrets_yaml | yq -y > tfsecrets.yaml
 ```

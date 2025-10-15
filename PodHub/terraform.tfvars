@@ -1,7 +1,7 @@
-cluster_name          = "podhub"
+cluster_name          = "PodHub"
 cluster_endpoint_host = "podhub.nahue.ar"
 cluster_endpoint_port = "6443"
-talos_version         = "v1.10.6"
+talos_version         = "v1.11.2"
 kubernetes_version    = "v1.33.4"
 
 controlplanes = {
@@ -59,7 +59,7 @@ masita = {
 porteño = {
   "192.168.0.100" = {
     disk     = "/dev/mmcblk0"
-    hostname = "cosa-underling-1"
+    hostname = "chaotic-underling-1"
     taints = {
       "location" = "Argentina:NoSchedule"
     }

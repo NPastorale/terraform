@@ -2,9 +2,10 @@ resource "helm_release" "cilium" {
   depends_on = [data.talos_cluster_health.talos]
   name       = "cilium"
   repository = "https://helm.cilium.io/"
-  version    = "1.18.1"
+  version    = "1.18.2"
   chart      = "cilium"
   namespace  = "kube-system"
+  timeout    = 1800
   set = [{
     name  = "ipam.mode"
     value = "kubernetes"
