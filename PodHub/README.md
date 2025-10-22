@@ -37,3 +37,19 @@ Get secrets
 ```
 terraform output -raw talos_secrets_yaml | yq -y > tfsecrets.yaml
 ```
+
+```mermaid
+graph TD;
+    ArgoCD-->|100| Cert-manager;
+    ArgoCD-->|100| NFS-CSI;
+    ArgoCD-->|100| NFS-CSI-config;
+    ArgoCD-->|100| External-secrets;
+    Vault-->|60|exterral-secrets-config;
+    Cert-manager-->|90|MetalLB;
+    Cert-manager-->|90|vault-config;
+    MetalLB-->|80|ingress[Internal Ingress Controller];
+    MetalLB-->|80|metallb-config;
+    ingress-->|70|Vault;
+    vault-config-->|70|Vault;
+    NFS-CSI-->|70|Vault;
+```

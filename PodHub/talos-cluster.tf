@@ -16,7 +16,7 @@ data "talos_machine_configuration" "controlplane" {
     file("${path.module}/patches/hostDNS.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
     file("${path.module}/patches/pod-security.yaml"),
-    # file("${path.module}/patches/registry-mirrors.yaml")
+    file("${path.module}/patches/registry-mirrors.yaml")
   ]
 }
 
@@ -32,7 +32,7 @@ data "talos_machine_configuration" "worker" {
   config_patches = [
     file("${path.module}/patches/hostDNS.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
-    # file("${path.module}/patches/registry-mirrors.yaml")
+    file("${path.module}/patches/registry-mirrors.yaml")
   ]
 }
 
@@ -190,11 +190,11 @@ data "talos_cluster_health" "talos" {
   worker_nodes = concat(
     keys(var.raspberries),
     keys(var.N100s),
-    keys(var.masita),
-    keys(var.porteño),
+    # keys(var.masita),
+    # keys(var.porteño),
   )
   timeouts = {
-    read = "30s"
+    read = "300s"
   }
 }
 
@@ -206,7 +206,7 @@ data "talos_cluster_health" "kubernetes" {
   worker_nodes = concat(
     keys(var.raspberries),
     keys(var.N100s),
-    keys(var.masita),
-    keys(var.porteño),
+    # keys(var.masita),
+    # keys(var.porteño),
   )
 }
