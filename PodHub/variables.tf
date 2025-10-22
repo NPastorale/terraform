@@ -75,3 +75,15 @@ variable "porteño" {
     })
   }))
 }
+
+variable "kms_service_account_base64" {
+  description = "Base64-encoded service account JSON for KMS auth (provide as base64 string)"
+  type        = string
+  sensitive   = true
+}
+
+variable "vault_token_base64" {
+  description = "Base64-encoded Vault token for external-secrets (provide as base64 string)"
+  type        = string
+  sensitive   = true
+}
