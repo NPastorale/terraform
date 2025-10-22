@@ -33,6 +33,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-kms-auth.tf
+# Ignore sensitive files
 talosconfig
 kubeconfig
