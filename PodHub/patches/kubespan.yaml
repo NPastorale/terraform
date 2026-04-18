@@ -1,5 +1,5 @@
-- op: add
-  path: /machine/network/kubespan
-  value:
-    enabled: true
-    harvestExtraEndpoints: true
+machine:
+  network:
+    kubespan:
+      enabled: true
+      harvestExtraEndpoints: true

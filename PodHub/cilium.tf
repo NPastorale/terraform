@@ -2,7 +2,7 @@ resource "helm_release" "cilium" {
   depends_on = [data.talos_cluster_health.talos]
   name       = "cilium"
   repository = "https://helm.cilium.io/"
-  version    = "1.18.2"
+  version    = "1.19.3"
   chart      = "cilium"
   namespace  = "kube-system"
   timeout    = 1800
@@ -42,19 +42,19 @@ resource "helm_release" "cilium" {
       value = base64encode(tls_private_key.server_key.private_key_pem)
     },
     # NETKIT specific settings
-    {
-      name  = "bpf.datapathMode"
-      value = "netkit"
-      }, {
-      name  = "bpf.masquerade"
-      value = "true"
-      }, {
-      name  = "bpf.distributedLRU.enabled"
-      value = "true"
-      }, {
-      name  = "bpfClockProbe"
-      value = "true"
-    }
+    # {
+    #   name  = "bpf.datapathMode"
+    #   value = "netkit"
+    #   }, {
+    #   name  = "bpf.masquerade"
+    #   value = "true"
+    #   }, {
+    #   name  = "bpf.distributedLRU.enabled"
+    #   value = "true"
+    #   }, {
+    #   name  = "bpfClockProbe"
+    #   value = "true"
+    # }
     # End of NETKIT specific settings
   ]
 

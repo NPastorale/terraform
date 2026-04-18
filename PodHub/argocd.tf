@@ -2,7 +2,7 @@ resource "helm_release" "argocd" {
   depends_on       = [data.talos_cluster_health.kubernetes]
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
-  version          = "8.6.1"
+  version          = "9.5.2"
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
@@ -36,37 +36,35 @@ resource "helm_release" "argocd" {
 }
 
 
-resource "argocd_application" "app_of_apps" {
-  depends_on = [helm_release.argocd]
+# resource "argocd_application" "app_of_apps" {
+#   depends_on = [helm_release.argocd]
 
-  metadata {
-    name      = "app-of-apps"
-    namespace = "argocd"
-  }
+#   metadata {
+#     name      = "app-of-apps"
+#     namespace = "argocd"
+#   }
 
-  spec {
-    destination {
-      namespace = "argocd"
-      server    = "https://kubernetes.default.svc"
-    }
-
-    project = "default"
-
-    source {
-      path            = "argocd"
-      repo_url        = "https://github.com/NPastorale/kubernetes"
-      target_revision = "feature/cluster-bootstrap"
-    }
-
-    sync_policy {
-      automated {
-        prune     = true
-        self_heal = true
-      }
-      sync_options = ["CreateNamespace=true", "ApplyOutOfSyncOnly=true"]
-      retry {
-        limit = 10
-      }
-    }
-  }
-}
+#   spec {
+#     project = "default"
+#     destination {
+#       server    = "https://kubernetes.default.svc"
+#       namespace = "argocd"
+#     }
+#     source {
+#       repo_url        = "https://github.com/NPastorale/kubernetes"
+#       path            = "argocd"
+#       target_revision = "feature/terraform-tests"
+#     }
+#     sync_policy {
+#       automated {
+#         prune       = true
+#         self_heal   = true
+#         allow_empty = true
+#       }
+#       sync_options = ["CreateNamespace=true", "ApplyOutOfSyncOnly=true"]
+#       retry {
+#         limit = 10
+#       }
+#     }
+#   }
+# }

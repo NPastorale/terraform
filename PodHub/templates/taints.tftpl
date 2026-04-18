@@ -1,5 +1,0 @@
-machine:
-  nodeTaints:
-    %{ for key, value in taints }
-      ${key}: ${value}
-    %{ endfor }

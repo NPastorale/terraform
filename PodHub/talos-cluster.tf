@@ -12,11 +12,11 @@ data "talos_machine_configuration" "controlplane" {
   docs               = false
   examples           = false
   config_patches = [
+    file("${path.module}/patches/admissionControl.yaml"),
     file("${path.module}/patches/CNI.yaml"),
-    file("${path.module}/patches/hostDNS.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
-    file("${path.module}/patches/pod-security.yaml"),
-    file("${path.module}/patches/registry-mirrors.yaml")
+    file("${path.module}/patches/registry-mirrors.yaml"),
+    file("${path.module}/patches/VIP.yaml")
   ]
 }
 
@@ -30,7 +30,6 @@ data "talos_machine_configuration" "worker" {
   docs               = false
   examples           = false
   config_patches = [
-    file("${path.module}/patches/hostDNS.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
     file("${path.module}/patches/registry-mirrors.yaml")
   ]
@@ -53,10 +52,15 @@ resource "talos_machine_configuration_apply" "controlplane" {
     reset    = true
   }
   config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
+    templatefile("${path.module}/templates/installation.tftpl.yaml", {
+      disk  = each.value.disk
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+    }),
+    templatefile("${path.module}/templates/labels.tftpl.yaml", {
+      location = each.value.location
+    }),
+    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
       hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     })
   ]
 }
@@ -72,10 +76,18 @@ resource "talos_machine_configuration_apply" "raspberries" {
     reset    = true
   }
   config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
+    templatefile("${path.module}/templates/installation.tftpl.yaml", {
+      disk  = each.value.disk
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+    }),
+    templatefile("${path.module}/templates/labels.tftpl.yaml", {
+      location = each.value.location
+    }),
+    templatefile("${path.module}/templates/taints.tftpl.yaml", {
+      taints = each.value.taints
+    }),
+    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
       hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     })
   ]
 }
@@ -85,11 +97,24 @@ resource "talos_machine_configuration_apply" "N100s" {
   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
   for_each                    = var.N100s
   node                        = each.key
+  on_destroy = {
+    graceful = false
+    reboot   = true
+    reset    = true
+  }
   config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
+    templatefile("${path.module}/templates/installation.tftpl.yaml", {
+      disk  = each.value.disk
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+    }),
+    templatefile("${path.module}/templates/labels.tftpl.yaml", {
+      location = each.value.location
+    }),
+    templatefile("${path.module}/templates/taints.tftpl.yaml", {
+      taints = each.value.taints
+    }),
+    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
       hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
     })
   ]
 }
@@ -105,12 +130,19 @@ data "talos_machine_configuration" "masita" {
   examples           = false
   for_each           = var.masita
   config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
-      hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+    templatefile("${path.module}/templates/installation.tftpl.yaml", {
+      disk  = each.value.disk
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
     }),
-    file("${path.module}/patches/hostDNS.yaml"),
+    templatefile("${path.module}/templates/labels.tftpl.yaml", {
+      location = each.value.location
+    }),
+    templatefile("${path.module}/templates/taints.tftpl.yaml", {
+      taints = each.value.taints
+    }),
+    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
+      hostname = each.value.hostname
+    }),
     file("${path.module}/patches/kubespan.yaml")
   ]
 }
@@ -126,12 +158,19 @@ data "talos_machine_configuration" "porteño" {
   examples           = false
   for_each           = var.porteño
   config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl", {
-      hostname = each.value.hostname
-      disk     = each.value.disk
-      image    = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+    templatefile("${path.module}/templates/installation.tftpl.yaml", {
+      disk  = each.value.disk
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
     }),
-    file("${path.module}/patches/hostDNS.yaml"),
+    templatefile("${path.module}/templates/labels.tftpl.yaml", {
+      location = each.value.location
+    }),
+    templatefile("${path.module}/templates/taints.tftpl.yaml", {
+      taints = each.value.taints
+    }),
+    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
+      hostname = each.value.hostname
+    }),
     file("${path.module}/patches/kubespan.yaml")
   ]
 }
@@ -190,8 +229,8 @@ data "talos_cluster_health" "talos" {
   worker_nodes = concat(
     keys(var.raspberries),
     keys(var.N100s),
-    # keys(var.masita),
-    # keys(var.porteño),
+    keys(var.masita),
+    keys(var.porteño),
   )
   timeouts = {
     read = "300s"
@@ -206,7 +245,7 @@ data "talos_cluster_health" "kubernetes" {
   worker_nodes = concat(
     keys(var.raspberries),
     keys(var.N100s),
-    # keys(var.masita),
-    # keys(var.porteño),
+    keys(var.masita),
+    keys(var.porteño),
   )
 }

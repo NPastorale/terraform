@@ -8,20 +8,20 @@ terraform {
   # }
   required_providers {
     talos = {
-      source  = "siderolabs/talos"
-      version = "0.9.0"
+      source = "siderolabs/talos"
+      # version = "0.9.0"
     }
     helm = {
-      source  = "hashicorp/helm"
-      version = "3.0.2"
+      source = "hashicorp/helm"
+      # version = "3.0.2"
     }
     kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.38.0"
+      source = "hashicorp/kubernetes"
+      # version = "2.38.0"
     }
     argocd = {
-      source = "argoproj-labs/argocd"
-      # version = "~> 2.0"
+      source  = "argoproj-labs/argocd"
+      version = "7.15.0"
     }
   }
 }
@@ -43,12 +43,9 @@ provider "kubernetes" {
 }
 
 provider "argocd" {
-  username = "admin"
-  password = try(
-    base64decode(data.kubernetes_secret.argocd_admin.data["password"]),
-    data.kubernetes_secret.argocd_admin.data["password"]
-  )
-  port_forward_with_namespace = "argocd"
+  username     = "admin"
+  password     = data.kubernetes_secret_v1.argocd_admin.data["password"]
+  port_forward = true
   kubernetes {
     host                   = talos_cluster_kubeconfig.this.kubernetes_client_configuration.host
     cluster_ca_certificate = base64decode(talos_cluster_kubeconfig.this.kubernetes_client_configuration.ca_certificate)
@@ -57,10 +54,10 @@ provider "argocd" {
   }
 }
 
-data "kubernetes_secret" "argocd_admin" {
+data "kubernetes_secret_v1" "argocd_admin" {
+  depends_on = [helm_release.argocd]
   metadata {
     name      = "argocd-initial-admin-secret"
     namespace = "argocd"
   }
-  depends_on = [helm_release.argocd]
 }

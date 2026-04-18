@@ -1,8 +1,6 @@
-- op: add
-  path: /cluster/network/cni
-  value:
-    name: none
-- op: add
-  path: /cluster/proxy
-  value:
+cluster:
+  network:
+    cni:
+      name: none
+  proxy:
     disabled: true

@@ -28,6 +28,11 @@ variable "controlplanes" {
   type = map(object({
     disk     = string
     hostname = string
+    location = object({
+      region = string
+      zone   = string
+    })
+    taints = optional(map(string), {})
   }))
 }
 
@@ -36,6 +41,11 @@ variable "raspberries" {
   type = map(object({
     disk     = string
     hostname = string
+    location = object({
+      region = string
+      zone   = string
+    })
+    taints = optional(map(string), {})
   }))
 }
 
@@ -44,6 +54,11 @@ variable "N100s" {
   type = map(object({
     disk     = string
     hostname = string
+    location = object({
+      region = string
+      zone   = string
+    })
+    taints = optional(map(string), {})
   }))
   default = {}
 }
@@ -53,11 +68,10 @@ variable "masita" {
   type = map(object({
     disk     = string
     hostname = string
-    taints   = map(string)
+    taints   = optional(map(string), {})
     location = object({
-      continent = string
-      country   = string
-      city      = string
+      region = string
+      zone   = string
     })
   }))
 }
@@ -67,23 +81,22 @@ variable "porteño" {
   type = map(object({
     disk     = string
     hostname = string
-    taints   = map(string)
+    taints   = optional(map(string), {})
     location = object({
-      continent = string
-      country   = string
-      city      = string
+      region = string
+      zone   = string
     })
   }))
 }
 
-variable "kms_service_account_base64" {
-  description = "Base64-encoded service account JSON for KMS auth (provide as base64 string)"
-  type        = string
-  sensitive   = true
-}
+# variable "kms_service_account_base64" {
+#   description = "Base64-encoded service account JSON for KMS auth (provide as base64 string)"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "vault_token_base64" {
-  description = "Base64-encoded Vault token for external-secrets (provide as base64 string)"
-  type        = string
-  sensitive   = true
-}
+# variable "vault_token_base64" {
+#   description = "Base64-encoded Vault token for external-secrets (provide as base64 string)"
+#   type        = string
+#   sensitive   = true
+# }

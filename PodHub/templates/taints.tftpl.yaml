@@ -1,0 +1,17 @@
+machine:
+  kubelet:
+    extraConfig:
+      registerWithTaints:
+%{ for key, value in taints }
+        - key: ${key}
+          value: ${element(split(":", value), 0)}
+          effect: ${element(split(":", value), 1)}
+%{ endfor }
+  nodeTaints:
+%{ if length(taints) == 0 }
+    {}
+%{ else }
+    %{ for key, value in taints }
+      ${key}: ${value}
+    %{ endfor }
+%{ endif }

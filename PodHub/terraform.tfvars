@@ -1,21 +1,33 @@
 cluster_name          = "PodHub"
 cluster_endpoint_host = "podhub.nahue.ar"
 cluster_endpoint_port = "6443"
-talos_version         = "v1.11.2"
-kubernetes_version    = "v1.33.4"
+talos_version         = "v1.12.6"
+kubernetes_version    = "v1.35.3"
 
 controlplanes = {
   "10.10.20.11" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-1"
+    location = {
+      region = "ESP"
+      zone   = "Barcelona"
+    }
   },
   "10.10.20.12" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-2"
+    location = {
+      region = "ESP"
+      zone   = "Barcelona"
+    }
   },
   "10.10.20.13" = {
     disk     = "/dev/mmcblk0"
     hostname = "absolute-overlord-3"
+    location = {
+      region = "ESP"
+      zone   = "Barcelona"
+    }
   }
 }
 
@@ -23,10 +35,18 @@ raspberries = {
   "10.10.20.21" = {
     disk     = "/dev/mmcblk0"
     hostname = "abysmal-underling-1"
+    location = {
+      region = "ESP"
+      zone   = "Barcelona"
+    }
   },
   "10.10.20.22" = {
     disk     = "/dev/mmcblk0"
     hostname = "abysmal-underling-2"
+    location = {
+      region = "ESP"
+      zone   = "Barcelona"
+    }
   }
 }
 
@@ -46,12 +66,11 @@ masita = {
     disk     = "/dev/mmcblk0"
     hostname = "macabre-underling-1"
     taints = {
-      "location" = "Argentina:NoSchedule"
+      "region" = "ARG:NoSchedule"
     }
     location = {
-      continent = "SA"
-      country   = "AR"
-      city      = "Rosario"
+      region = "ARG"
+      zone   = "Rosario"
     }
   }
 }
@@ -61,12 +80,11 @@ porteño = {
     disk     = "/dev/mmcblk0"
     hostname = "chaotic-underling-1"
     taints = {
-      "location" = "Argentina:NoSchedule"
+      "region" = "ARG:NoSchedule"
     }
     location = {
-      continent = "SA"
-      country   = "AR"
-      city      = "CABA"
+      region = "ARG"
+      zone   = "CABA"
     }
   }
 }

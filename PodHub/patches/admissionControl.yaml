@@ -1,0 +1,9 @@
+cluster:
+  apiServer:
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          defaults:
+            enforce: privileged
+            audit: privileged
+            warn: privileged
