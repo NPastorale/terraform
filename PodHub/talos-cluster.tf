@@ -16,7 +16,7 @@ data "talos_machine_configuration" "controlplane" {
     file("${path.module}/patches/CNI.yaml"),
     file("${path.module}/patches/kubespan.yaml"),
     file("${path.module}/patches/registry-mirrors.yaml"),
-    file("${path.module}/patches/VIP.yaml")
+    # file("${path.module}/patches/VIP.yaml")
   ]
 }
 
@@ -54,7 +54,7 @@ resource "talos_machine_configuration_apply" "controlplane" {
   config_patches = [
     templatefile("${path.module}/templates/installation.tftpl.yaml", {
       disk  = each.value.disk
-      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
     }),
     templatefile("${path.module}/templates/labels.tftpl.yaml", {
       location = each.value.location
@@ -65,32 +65,32 @@ resource "talos_machine_configuration_apply" "controlplane" {
   ]
 }
 
-resource "talos_machine_configuration_apply" "raspberries" {
-  client_configuration        = talos_machine_secrets.secrets.client_configuration
-  machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
-  for_each                    = var.raspberries
-  node                        = each.key
-  on_destroy = {
-    graceful = false
-    reboot   = true
-    reset    = true
-  }
-  config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl.yaml", {
-      disk  = each.value.disk
-      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
-    }),
-    templatefile("${path.module}/templates/labels.tftpl.yaml", {
-      location = each.value.location
-    }),
-    templatefile("${path.module}/templates/taints.tftpl.yaml", {
-      taints = each.value.taints
-    }),
-    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
-      hostname = each.value.hostname
-    })
-  ]
-}
+# resource "talos_machine_configuration_apply" "raspberries" {
+#   client_configuration        = talos_machine_secrets.secrets.client_configuration
+#   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
+#   for_each                    = var.raspberries
+#   node                        = each.key
+#   on_destroy = {
+#     graceful = false
+#     reboot   = true
+#     reset    = true
+#   }
+#   config_patches = [
+#     templatefile("${path.module}/templates/installation.tftpl.yaml", {
+#       disk  = each.value.disk
+#       image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+#     }),
+#     templatefile("${path.module}/templates/labels.tftpl.yaml", {
+#       location = each.value.location
+#     }),
+#     templatefile("${path.module}/templates/taints.tftpl.yaml", {
+#       taints = each.value.taints
+#     }),
+#     templatefile("${path.module}/templates/hostname.tftpl.yaml", {
+#       hostname = each.value.hostname
+#     })
+#   ]
+# }
 
 resource "talos_machine_configuration_apply" "N100s" {
   client_configuration        = talos_machine_secrets.secrets.client_configuration
@@ -105,7 +105,7 @@ resource "talos_machine_configuration_apply" "N100s" {
   config_patches = [
     templatefile("${path.module}/templates/installation.tftpl.yaml", {
       disk  = each.value.disk
-      image = "factory.talos.dev/installer/${talos_image_factory_schematic.raspberry.id}:${var.talos_version}"
+      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
     }),
     templatefile("${path.module}/templates/labels.tftpl.yaml", {
       location = each.value.location
@@ -119,61 +119,61 @@ resource "talos_machine_configuration_apply" "N100s" {
   ]
 }
 
-data "talos_machine_configuration" "masita" {
-  cluster_name       = var.cluster_name
-  cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
-  machine_type       = "worker"
-  machine_secrets    = talos_machine_secrets.secrets.machine_secrets
-  talos_version      = var.talos_version
-  kubernetes_version = var.kubernetes_version
-  docs               = false
-  examples           = false
-  for_each           = var.masita
-  config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl.yaml", {
-      disk  = each.value.disk
-      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
-    }),
-    templatefile("${path.module}/templates/labels.tftpl.yaml", {
-      location = each.value.location
-    }),
-    templatefile("${path.module}/templates/taints.tftpl.yaml", {
-      taints = each.value.taints
-    }),
-    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
-      hostname = each.value.hostname
-    }),
-    file("${path.module}/patches/kubespan.yaml")
-  ]
-}
+# data "talos_machine_configuration" "masita" {
+#   cluster_name       = var.cluster_name
+#   cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
+#   machine_type       = "worker"
+#   machine_secrets    = talos_machine_secrets.secrets.machine_secrets
+#   talos_version      = var.talos_version
+#   kubernetes_version = var.kubernetes_version
+#   docs               = false
+#   examples           = false
+#   for_each           = var.masita
+#   config_patches = [
+#     templatefile("${path.module}/templates/installation.tftpl.yaml", {
+#       disk  = each.value.disk
+#       image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+#     }),
+#     templatefile("${path.module}/templates/labels.tftpl.yaml", {
+#       location = each.value.location
+#     }),
+#     templatefile("${path.module}/templates/taints.tftpl.yaml", {
+#       taints = each.value.taints
+#     }),
+#     templatefile("${path.module}/templates/hostname.tftpl.yaml", {
+#       hostname = each.value.hostname
+#     }),
+#     file("${path.module}/patches/kubespan.yaml")
+#   ]
+# }
 
-data "talos_machine_configuration" "porteño" {
-  cluster_name       = var.cluster_name
-  cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
-  machine_type       = "worker"
-  machine_secrets    = talos_machine_secrets.secrets.machine_secrets
-  talos_version      = var.talos_version
-  kubernetes_version = var.kubernetes_version
-  docs               = false
-  examples           = false
-  for_each           = var.porteño
-  config_patches = [
-    templatefile("${path.module}/templates/installation.tftpl.yaml", {
-      disk  = each.value.disk
-      image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
-    }),
-    templatefile("${path.module}/templates/labels.tftpl.yaml", {
-      location = each.value.location
-    }),
-    templatefile("${path.module}/templates/taints.tftpl.yaml", {
-      taints = each.value.taints
-    }),
-    templatefile("${path.module}/templates/hostname.tftpl.yaml", {
-      hostname = each.value.hostname
-    }),
-    file("${path.module}/patches/kubespan.yaml")
-  ]
-}
+# data "talos_machine_configuration" "porteño" {
+#   cluster_name       = var.cluster_name
+#   cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
+#   machine_type       = "worker"
+#   machine_secrets    = talos_machine_secrets.secrets.machine_secrets
+#   talos_version      = var.talos_version
+#   kubernetes_version = var.kubernetes_version
+#   docs               = false
+#   examples           = false
+#   for_each           = var.porteño
+#   config_patches = [
+#     templatefile("${path.module}/templates/installation.tftpl.yaml", {
+#       disk  = each.value.disk
+#       image = "factory.talos.dev/installer/${talos_image_factory_schematic.x86.id}:${var.talos_version}"
+#     }),
+#     templatefile("${path.module}/templates/labels.tftpl.yaml", {
+#       location = each.value.location
+#     }),
+#     templatefile("${path.module}/templates/taints.tftpl.yaml", {
+#       taints = each.value.taints
+#     }),
+#     templatefile("${path.module}/templates/hostname.tftpl.yaml", {
+#       hostname = each.value.hostname
+#     }),
+#     file("${path.module}/patches/kubespan.yaml")
+#   ]
+# }
 
 resource "talos_machine_bootstrap" "bootstrap" {
   depends_on           = [talos_machine_configuration_apply.controlplane]
@@ -221,31 +221,23 @@ resource "talos_image_factory_schematic" "raspberry" {
   })
 }
 
-data "talos_cluster_health" "talos" {
-  client_configuration   = talos_machine_secrets.secrets.client_configuration
-  control_plane_nodes    = [for k, v in var.controlplanes : k]
-  endpoints              = [for k, v in var.controlplanes : k]
-  skip_kubernetes_checks = true
+ephemeral "talos_cluster_health" "talos" {
+  depends_on           = [talos_machine_bootstrap.bootstrap]
+  client_configuration = talos_machine_secrets.secrets.client_configuration
+  control_plane_nodes  = [for k, v in var.controlplanes : k]
+  endpoints            = [for k, v in var.controlplanes : k]
+  health_check_level   = "k8s"
   worker_nodes = concat(
-    keys(var.raspberries),
     keys(var.N100s),
-    keys(var.masita),
-    keys(var.porteño),
   )
-  timeouts = {
-    read = "300s"
-  }
 }
 
-data "talos_cluster_health" "kubernetes" {
+ephemeral "talos_cluster_health" "kubernetes" {
   depends_on           = [helm_release.cilium]
   client_configuration = talos_machine_secrets.secrets.client_configuration
   control_plane_nodes  = [for k, v in var.controlplanes : k]
   endpoints            = [for k, v in var.controlplanes : k]
   worker_nodes = concat(
-    keys(var.raspberries),
     keys(var.N100s),
-    keys(var.masita),
-    keys(var.porteño),
   )
 }

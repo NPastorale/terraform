@@ -15,12 +15,12 @@ output "controlplane_config" {
   sensitive = true
 }
 
-output "raspberries_config" {
-  value = [
-    for k in talos_machine_configuration_apply.raspberries : k.machine_configuration
-  ]
-  sensitive = true
-}
+# output "raspberries_config" {
+#   value = [
+#     for k in talos_machine_configuration_apply.raspberries : k.machine_configuration
+#   ]
+#   sensitive = true
+# }
 
 # output "N100s_config" {
 #   value = [
@@ -29,19 +29,19 @@ output "raspberries_config" {
 #   sensitive = true
 # }
 
-output "masita_config" {
-  value = [
-    for k in data.talos_machine_configuration.masita : k.machine_configuration
-  ]
-  sensitive = true
-}
+# output "masita_config" {
+#   value = [
+#     for k in data.talos_machine_configuration.masita : k.machine_configuration
+#   ]
+#   sensitive = true
+# }
 
-output "porteño_config" {
-  value = [
-    for k in data.talos_machine_configuration.porteño : k.machine_configuration
-  ]
-  sensitive = true
-}
+# output "porteño_config" {
+#   value = [
+#     for k in data.talos_machine_configuration.porteño : k.machine_configuration
+#   ]
+#   sensitive = true
+# }
 
 
 # Output secrets in a format compatible with talosctl

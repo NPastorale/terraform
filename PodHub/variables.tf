@@ -36,18 +36,18 @@ variable "controlplanes" {
   }))
 }
 
-variable "raspberries" {
-  description = "A map of raspberries data"
-  type = map(object({
-    disk     = string
-    hostname = string
-    location = object({
-      region = string
-      zone   = string
-    })
-    taints = optional(map(string), {})
-  }))
-}
+# variable "raspberries" {
+#   description = "A map of raspberries data"
+#   type = map(object({
+#     disk     = string
+#     hostname = string
+#     location = object({
+#       region = string
+#       zone   = string
+#     })
+#     taints = optional(map(string), {})
+#   }))
+# }
 
 variable "N100s" {
   description = "A map of N100s data"
@@ -63,31 +63,31 @@ variable "N100s" {
   default = {}
 }
 
-variable "masita" {
-  description = "A map of masita data"
-  type = map(object({
-    disk     = string
-    hostname = string
-    taints   = optional(map(string), {})
-    location = object({
-      region = string
-      zone   = string
-    })
-  }))
-}
+# variable "masita" {
+#   description = "A map of masita data"
+#   type = map(object({
+#     disk     = string
+#     hostname = string
+#     taints   = optional(map(string), {})
+#     location = object({
+#       region = string
+#       zone   = string
+#     })
+#   }))
+# }
 
-variable "porteño" {
-  description = "A map of porteño data"
-  type = map(object({
-    disk     = string
-    hostname = string
-    taints   = optional(map(string), {})
-    location = object({
-      region = string
-      zone   = string
-    })
-  }))
-}
+# variable "porteño" {
+#   description = "A map of porteño data"
+#   type = map(object({
+#     disk     = string
+#     hostname = string
+#     taints   = optional(map(string), {})
+#     location = object({
+#       region = string
+#       zone   = string
+#     })
+#   }))
+# }
 
 # variable "kms_service_account_base64" {
 #   description = "Base64-encoded service account JSON for KMS auth (provide as base64 string)"

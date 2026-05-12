@@ -8,8 +8,8 @@ terraform {
   # }
   required_providers {
     talos = {
-      source = "siderolabs/talos"
-      # version = "0.9.0"
+      source  = "siderolabs/talos"
+      version = "0.11.0"
     }
     helm = {
       source = "hashicorp/helm"
@@ -20,8 +20,8 @@ terraform {
       # version = "2.38.0"
     }
     argocd = {
-      source  = "argoproj-labs/argocd"
-      version = "7.15.0"
+      source = "argoproj-labs/argocd"
+      # version = "7.15.3"
     }
   }
 }

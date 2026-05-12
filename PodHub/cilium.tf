@@ -1,5 +1,5 @@
 resource "helm_release" "cilium" {
-  depends_on = [data.talos_cluster_health.talos]
+  depends_on = [ephemeral.talos_cluster_health.talos]
   name       = "cilium"
   repository = "https://helm.cilium.io/"
   version    = "1.19.3"
