@@ -38,36 +38,10 @@ resource "helm_release" "argocd" {
   }
 }
 
-
-# resource "argocd_application" "app_of_apps" {
-#   depends_on = [helm_release.argocd]
-
-#   metadata {
-#     name      = "app-of-apps"
-#     namespace = "argocd"
-#   }
-
-#   spec {
-#     project = "default"
-#     destination {
-#       server    = "https://kubernetes.default.svc"
-#       namespace = "argocd"
-#     }
-#     source {
-#       repo_url        = "https://github.com/NPastorale/kubernetes"
-#       path            = "argocd"
-#       target_revision = "feature/terraform-tests"
-#     }
-#     sync_policy {
-#       automated {
-#         prune       = true
-#         self_heal   = true
-#         allow_empty = true
-#       }
-#       sync_options = ["CreateNamespace=true", "ApplyOutOfSyncOnly=true"]
-#       retry {
-#         limit = 10
-#       }
-#     }
-#   }
-# }
+data "kubernetes_secret_v1" "argocd_admin" {
+  depends_on = [helm_release.argocd]
+  metadata {
+    name      = "argocd-initial-admin-secret"
+    namespace = "argocd"
+  }
+}

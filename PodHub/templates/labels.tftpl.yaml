@@ -1,4 +1,5 @@
 machine:
   nodeLabels:
-    topology.kubernetes.io/region: ${location.region}
-    topology.kubernetes.io/zone: ${location.zone}
+%{ for key, value in labels }
+    ${key}: ${value}
+%{ endfor }
