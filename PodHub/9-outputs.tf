@@ -26,20 +26,6 @@ output "worker_configs" {
   sensitive = true
 }
 
-# output "raspberries_config" {
-#   value = [
-#     for k in talos_machine_configuration_apply.raspberries : k.machine_configuration
-#   ]
-#   sensitive = true
-# }
-
-# output "N100s_config" {
-#   value = [
-#     for k in talos_machine_configuration_apply.N100s : k.machine_configuration
-#   ]
-#   sensitive = true
-# }
-
 # output "masita_config" {
 #   value = [
 #     for k in data.talos_machine_configuration.masita : k.machine_configuration
@@ -57,11 +43,9 @@ output "worker_configs" {
 
 # Output secrets in a format compatible with talosctl
 locals {
-  # Shorthand reference to the machine secrets object for reuse below.
   ms = talos_machine_secrets.secrets.machine_secrets
 
-  # Maps Terraform's internal certificate key names to the snake_case keys expected by talosctl.
-  # talosctl uses "k8saggregator", "k8sserviceaccount" etc. while Terraform uses "k8s_aggregator".
+  # Maps Terraform's internal certificate key names to the snake_case keys expected by talosctl
   cert_section_map = {
     etcd               = "etcd"
     k8s                = "k8s"
@@ -71,7 +55,7 @@ locals {
   }
 
   # Reformats the certs map: renames sections via cert_section_map and renames "cert" keys to "crt"
-  # to match the format expected by `talosctl secrets`.
+  #to match the format expected by `talosctl secrets`
   certs = {
     for k, v in local.ms.certs :
     lookup(local.cert_section_map, k, k) => {
@@ -80,9 +64,7 @@ locals {
     }
   }
 
-  # Collects bootstrap token and optional encryption secrets into a single map.
-  # The conditional checks ensure we only include encryption keys when they are actually set,
-  # avoiding null entries that would break YAML serialization.
+  # Collects bootstrap token and optional encryption secrets into a single map
   secrets = merge(
     { bootstraptoken = local.ms.secrets.bootstrap_token },
     (
@@ -95,8 +77,7 @@ locals {
     ) ? { aescbcencryptionsecret = local.ms.secrets.aescbc_encryption_secret } : {}
   )
 
-  # Assembles the full secrets structure in the exact format expected by `talosctl cluster create --from-secrets`.
-  # Mirroring the upstream secrets.yaml schema so the output can be piped directly into talosctl commands.
+  # Assembles the full secrets structure in the exact format expected by `talosctl cluster create --from-secrets`
   talos_secrets = {
     cluster    = local.ms.cluster
     secrets    = local.secrets

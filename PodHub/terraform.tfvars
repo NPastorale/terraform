@@ -26,6 +26,6 @@ nodes = {
   }
 }
 
-kms_service_account_base64 = "YXNk"
+kms_service_account_base64 = "ZG9uJ3QgZ2V0IHRvbyBleGNpdGVkLCB0aGlzIGlzIGp1c3QgYSBwbGFjZWhvbGRlcg=="
 
-vault_token_base64 = "YXNk"
+vault_token_base64 = "dGhpcyBpcyBhbHNvIGEgcGxhY2Vob2xkZXIuIEFkZGluZyBtb3JlIHRleHQgc28gaXQgc2VlbXMgaW1wb3J0YW50"
