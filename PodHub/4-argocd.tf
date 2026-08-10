@@ -2,7 +2,7 @@ resource "helm_release" "argocd" {
   depends_on       = [ephemeral.talos_cluster_health.kubernetes]
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
-  version          = "10.3.0"
+  version          = "10.3.2"
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
