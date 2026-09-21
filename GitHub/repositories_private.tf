@@ -10,3 +10,9 @@ module "tailscale" {
   visibility      = "private"
   actions_secrets = { "TS_OAUTH_ID" : var.TS_OAUTH_ID, "TS_OAUTH_SECRET" : var.TS_OAUTH_SECRET, "TS_TAILNET" : var.TS_TAILNET }
 }
+
+module "go" {
+  source          = "./modules/repository"
+  repository_name = "go"
+  visibility      = "private"
+}

@@ -28,9 +28,9 @@ resource "github_repository" "repository" {
 resource "github_actions_secret" "actions_secret" {
   for_each = var.actions_secrets
 
-  repository      = github_repository.repository.name
-  secret_name     = each.key
-  plaintext_value = each.value
+  repository  = github_repository.repository.name
+  secret_name = each.key
+  value       = each.value
 }
 
 resource "github_actions_variable" "actions_variable" {

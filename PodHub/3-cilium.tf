@@ -1,8 +1,11 @@
+# Installs Cilium as the cluster CNI + kube-proxy replacement. Configured to use
+# Kubernetes IPAM, KubePrism on localhost:7445, and Hubble mTLS via the local CA
+# certs from 1-certs-cilium.tf. NETKIT tuning is present but commented out.
 resource "helm_release" "cilium" {
   depends_on = [ephemeral.talos_cluster_health.talos]
   name       = "cilium"
   repository = "https://helm.cilium.io/"
-  version    = "1.20.1"
+  version    = "1.20.2"
   chart      = "cilium"
   namespace  = "kube-system"
   timeout    = 1800

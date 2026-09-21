@@ -1,0 +1,9 @@
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  registerWithTaints:
+%{ for key, value in taints }
+    - key: ${key}
+      value: ${element(split(":", value), 0)}
+      effect: ${element(split(":", value), 1)}
+%{ endfor }

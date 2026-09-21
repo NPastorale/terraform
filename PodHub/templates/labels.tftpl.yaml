@@ -1,5 +1,0 @@
-machine:
-  nodeLabels:
-%{ for key, value in labels }
-    ${key}: ${value}
-%{ endfor }

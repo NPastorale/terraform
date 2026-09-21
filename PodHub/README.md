@@ -1,6 +1,7 @@
 # PodHub: Talos Kubernetes Cluster on Bare-Metal
 
 Terraform project that provisions a **Talos Linux Kubernetes cluster**, installs Cilium as CNI, and deploys ArgoCD. Uses:
+
 - Sidero Labs Talos provider (`talos`)
 - Helm provider (`helm`)
 - Kubernetes provider (`kubernetes`)
@@ -27,27 +28,22 @@ The project is **phase-separated** for clarity and uses **programmatic decision-
 
 ### File Structure
 
-| File | Phase | Responsibility |
-|:-----|:------|:---------------|
-| `0-terraform.tf` | Base | `terraform {}` block + `required_providers`. |
-| `0-variables.tf` | Base | Input variable definitions (`var.nodes`, versions, endpoint). |
-| `0-secrets.tf` | Base | (Unused) Commented K8s namespaces/secrets. |
-| `1-factory.tf` | **Info Phase** | Image Factory API lookups + schematic definitions. + `local.architecture_to_schematic` map. |
-| `2-certs-cilium.tf` | **Info Phase** | TLS CA + certificates for Cilium Hubble. No cluster dependencies. |
-| `2-cluster-info.tf` | **Info Phase** | Secrets + machine config data sources + **patch composition logic in locals** (`static_patches_by_role`, `per_node_patches`, etc). |
-| `3-cluster-apply.tf` | **Action Phase** | Actually touches nodes: `talos_machine_configuration_apply.all`, bootstrap, kubeconfig, health checks. Also defines `local.kubernetes_client_config` for providers. |
-| `3-providers.tf` | **Action Phase** | Provider configs (helm, kubernetes, argocd). Simplified: uses `local.kubernetes_client_config` instead of repeating 4 lines each. |
-| `4-cilium.tf` | **Apps Phase** | Helm release for Cilium CNI. Depends on `ephemeral.talos_cluster_health.talos`. |
-| `5-argocd.tf` | **Apps Phase** | Helm release for ArgoCD. Depends on `ephemeral.talos_cluster_health.kubernetes`. Also contains `data.kubernetes_secret_v1.argocd_admin`. |
-| `9-outputs.tf` | Last | Outputs: talosconfig, kubeconfig, node configs, secrets yaml. |
-| `terraform.tfvars` | - | User-provided values (`var.nodes`, versions, endpoint). |
+| File                | Phase            | Responsibility                                                                                                                                                                |
+| :------------------ | :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0-terraform.tf`    | Base             | `terraform {}` block + `required_providers`.                                                                                                                                  |
+| `0-variables.tf`    | Base             | Input variable definitions (`var.nodes`, versions, endpoint).                                                                                                                 |
+| `1-factory.tf`      | **Info Phase**   | Image Factory API lookups + schematic definitions + `local.architecture_to_schematic` map.                                                                                    |
+| `1-certs-cilium.tf` | **Info Phase**   | TLS CA + certificates for Cilium Hubble. No cluster dependencies.                                                                                                             |
+| `1-cluster-info.tf` | **Info Phase**   | Secrets + machine config data sources (per-node) + **patch composition logic in locals** (`static_patches_by_role`, `node_config`, `node_image`).                             |
+| `2-cluster.tf`      | **Action Phase** | `talos_machine.all` (per-node config + OS version), `talos_cluster.this` (bootstrap), kubeconfig, health checks. Also defines `local.kubernetes_client_config` for providers. |
+| `3-cilium.tf`       | **Apps Phase**   | Helm release for Cilium CNI. Depends on `ephemeral.talos_cluster_health.talos`.                                                                                               |
+| `3-secrets.tf`      | **Apps Phase**   | Kubernetes namespaces and secrets (Vault, External Secrets).                                                                                                                  |
+| `4-argocd.tf`       | **Apps Phase**   | Helm release for ArgoCD. Depends on `ephemeral.talos_cluster_health.kubernetes`. Also contains `data.kubernetes_secret_v1.argocd_admin`.                                      |
+| `9-outputs.tf`      | Last             | Outputs: talosconfig, kubeconfig, node configs, secrets yaml.                                                                                                                 |
+| `terraform.tfvars`  | -                | User-provided values (`var.nodes`, versions, endpoint).                                                                                                                       |
 
-**Info Phase**: Reads/generates but does not apply to nodes.  
-**Action Phase**: SSHs into nodes, writes config, causes reboots, bootstraps cluster.  
-**Apps Phase**: Helm releases deployed into the running cluster.
-
-**Info Phase**: Reads/generates but does not apply to nodes.  
-**Action Phase**: SSHs into nodes, writes config, causes reboots, bootstraps cluster.
+**Info Phase**: Reads/generates but does not apply to nodes.
+**Action Phase**: Applies machine configuration to nodes, bootstraps etcd, fetches kubeconfig, runs health checks.
 
 ---
 
@@ -73,44 +69,42 @@ nodes = {
 
 ### How Attributes Decide Things (Programmatically)
 
-| Node Attribute | Determines |
-|:---------------|:-----------|
-| `role` | **Static patches applied**: `controlplane` gets `admissionControl.yaml` + `CNI.yaml` in addition to base patches. Also selects `data.talos_machine_configuration.controlplane` vs `.worker`. |
-| `architecture` | **Image Factory schematic**: `x86` uses `i915` + `intel-ucode` extensions. `arm64-rpi` uses Raspberry Pi overlay. |
-| `taints` | Conditionally applied **only for workers**. Workers with non-empty `taints` map get the taints patch. Empty taints = no taints patch. Controlplanes ignore this field entirely. |
+| Node Attribute | Determines                                                                                                                                                                                                        |
+| :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `role`         | **Static patches applied**: `controlplane` gets `admissionControl.yaml` + `KubeFlannelCNIConfig.yaml` + `KubeProxyConfig.yaml` in addition to base patches. Also sets `machine_type` in the per-node data source. |
+| `architecture` | **Image Factory schematic**: `x86` uses `i915` + `intel-ucode` extensions. `arm64-rpi` uses Raspberry Pi overlay.                                                                                                 |
+| `taints`       | Conditionally applied **only for workers**. Workers with non-empty `taints` map get the taints patch. Empty taints = no taints patch. Controlplanes ignore this field entirely.                                   |
 
-**All this logic lives in `2-cluster-info.tf` inside `locals {}` blocks**, not repeated across resource blocks.
+**All this logic lives in `1-cluster-info.tf` inside `locals {}` blocks**, not repeated across resource blocks.
 
 ---
 
 ## Patch Composition (How It Works)
 
-In `cluster-info.tf`, locals build patches dynamically:
+In `1-cluster-info.tf`, a single per-node data source merges role-level and per-node patches:
 
 ```hcl
-locals {
-  # Static patch sets by role
-  static_patches_by_role = {
-    controlplane = [kubespan.yaml, registry-mirrors.yaml, admissionControl.yaml, CNI.yaml]
-    worker       = [kubespan.yaml, registry-mirrors.yaml]
-  }
-
-  # Per-node patches: templates (installation, labels, hostname) + conditional taints
-  per_node_patches = {
-    for ip, node in var.nodes : ip => concat(
-      [installation template, labels template, hostname template],
-      node.role == "worker" && taints not empty ? [taints template] : []
-    )
-  }
+data "talos_machine_configuration" "this" {
+  for_each = var.nodes
+  # ...
+  config_patches = concat(
+    local.static_patches_by_role[each.value.role],
+    [
+      templatefile("templates/UnattendedInstallConfig.yaml.tftpl", { ... }),
+      templatefile("templates/HostnameConfig.yaml.tftpl", { ... }),
+    ],
+    <labels/taints template if applicable>,
+  )
 }
 ```
 
-In `cluster-apply.tf`, the **single unified apply resource** just references it:
+The `talos_machine` resource in `2-cluster.tf` consumes the rendered config directly:
 
 ```hcl
-resource "talos_machine_configuration_apply" "all" {
-  for_each       = var.nodes
-  config_patches = local.per_node_patches[each.key]
+resource "talos_machine" "all" {
+  for_each              = var.nodes
+  machine_configuration = data.talos_machine_configuration.this[each.key].machine_configuration
+  image                 = local.node_image[each.key]
   # ...
 }
 ```
@@ -156,7 +150,7 @@ nodes = {
 
 ### Change Which Static Patches Apply per Role
 
-Edit `local.static_patches_by_role` in `2-cluster-info.tf`. One place, not repeated.
+Edit `local.static_patches_by_role` in `1-cluster-info.tf`. One place, not repeated.
 
 ---
 

@@ -1,0 +1,7 @@
+apiVersion: v1alpha1
+kind: KubeAdmissionControlConfig
+name: PodSecurity
+configuration:
+  defaults:
+    enforce:
+      $patch: delete

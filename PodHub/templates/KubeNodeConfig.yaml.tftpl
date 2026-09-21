@@ -1,0 +1,14 @@
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+%{ if length(labels) > 0 }
+labels:
+%{ for key, value in labels }
+  ${key}: ${value}
+%{ endfor }
+%{ endif }
+%{ if length(taints) > 0 }
+taints:
+%{ for key, value in taints }
+  ${key}: ${value}
+%{ endfor }
+%{ endif }

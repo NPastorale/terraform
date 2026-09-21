@@ -36,3 +36,6 @@ terraform.rc
 # Ignore sensitive files
 talosconfig
 kubeconfig
+
+# Ignore secrets file
+secrets.yaml

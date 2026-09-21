@@ -1,8 +1,11 @@
+# Installs ArgoCD (GitOps) via the argo-helm chart. The custom health check
+# Lua hook makes ArgoCD report Application health properly. create_namespace
+# makes the argocd namespace automatically. ignore_changes avoids Helm churn.
 resource "helm_release" "argocd" {
   depends_on       = [ephemeral.talos_cluster_health.kubernetes]
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
-  version          = "10.9.1"
+  version          = "10.9.2"
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
@@ -38,6 +41,8 @@ resource "helm_release" "argocd" {
   }
 }
 
+# Reads the ArgoCD initial admin password so the argocd provider (in 0-terraform.tf)
+# can authenticate. Depends on the ArgoCD Helm release being installed first.
 data "kubernetes_secret_v1" "argocd_admin" {
   depends_on = [helm_release.argocd]
   metadata {

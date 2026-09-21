@@ -1,3 +1,5 @@
+# Creates the "vault" namespace that holds Vault-related secrets.
+# ignore_changes keeps it stable across applies once created.
 resource "kubernetes_namespace_v1" "vault" {
   depends_on = [ephemeral.talos_cluster_health.kubernetes]
   metadata {
@@ -8,6 +10,7 @@ resource "kubernetes_namespace_v1" "vault" {
   }
 }
 
+# Creates the "external-secrets" namespace for the External Secrets Operator + token.
 resource "kubernetes_namespace_v1" "external_secrets" {
   depends_on = [ephemeral.talos_cluster_health.kubernetes]
   metadata {
@@ -18,6 +21,8 @@ resource "kubernetes_namespace_v1" "external_secrets" {
   }
 }
 
+# KMS service-account credentials (GCP) used by Vault's KMS auto-unseal.
+# Sourced from var.kms_service_account_base64; lives in the vault namespace.
 resource "kubernetes_secret_v1" "kms_auth" {
   depends_on = [kubernetes_namespace_v1.vault]
   metadata {
@@ -33,6 +38,8 @@ resource "kubernetes_secret_v1" "kms_auth" {
   }
 }
 
+# Vault token consumed by the External Secrets Operator to read secrets from Vault.
+# Sourced from var.vault_token_base64; lives in the external-secrets namespace.
 resource "kubernetes_secret_v1" "vault_token" {
   depends_on = [kubernetes_namespace_v1.external_secrets]
   metadata {

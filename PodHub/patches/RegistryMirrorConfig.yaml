@@ -1,0 +1,59 @@
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: docker.io
+endpoints:
+  - url: http://10.10.20.10:30095
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: gcr.io
+endpoints:
+  - url: http://10.10.20.10:30097
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: ghcr.io
+endpoints:
+  - url: http://10.10.20.10:30098
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: lscr.io
+endpoints:
+  - url: http://10.10.20.10:30102
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: nvcr.io
+endpoints:
+  - url: http://10.10.20.10:30100
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: oci.external-secrets.io
+endpoints:
+  - url: http://10.10.20.10:30103
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: public.ecr.aws
+endpoints:
+  - url: http://10.10.20.10:30099
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: quay.io
+endpoints:
+  - url: http://10.10.20.10:30104
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: registry.gitlab.com
+endpoints:
+  - url: http://10.10.20.10:30101
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: registry.k8s.io
+endpoints:
+  - url: http://10.10.20.10:30096
