@@ -76,9 +76,15 @@ locals {
 #   * nodes that do not exist yet (scale-up) are not waited for at plan time, and
 #   * nodes Terraform does not manage (manual=true, e.g. the remote ARG workers)
 #     can never gate an apply.
-# The explicit dependency on talos_cluster is required: the provider config now comes
-# from the ephemeral kubeconfig (available before bootstrap), so without it the read
-# would run before the API exists on a first apply.
+# On a from-scratch apply this read can fail before it starts: talos_cluster completes
+# once the *Talos* layer is healthy (etcd, apid, kubelet), not when kube-apiserver or
+# the Layer2 VIP are serving, and the Kubernetes provider does not retry a refused
+# connection. Accepted workaround: run `terraform apply` a second time — the cluster
+# is up by then and the apply continues from here.
+#
+# Tracking issue for a control-plane-only health mode, which would replace this
+# inventory (and remove the need for the second apply):
+#   https://github.com/siderolabs/terraform-provider-talos/issues/221
 #
 # count = 0 with healthcheck_enabled = false: this inventory is the only thing besides
 # the gate itself that needs a functioning control plane, so disabling the gate must

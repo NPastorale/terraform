@@ -12,8 +12,8 @@ Terraform project that provisions a **Talos Linux Kubernetes cluster**, installs
 ## Quick Start
 
 1. Edit `terraform.tfvars` (nodes + versions)
-2. Run `terraform init && terraform apply`
-3. `terraform apply` writes the talosconfig to `./talosconfig` (0600); generate the kubeconfig on demand:
+2. Run `terraform init && terraform apply` (add `-var write_talosconfig=true` if you want `./talosconfig` written; the flag defaults to `false`)
+3. Generate the kubeconfig on demand:
 
 ```bash
 export TALOSCONFIG=$PWD/talosconfig      # or: cp talosconfig ~/.talos/config
@@ -21,9 +21,15 @@ talosctl --talosconfig ./talosconfig -n 10.10.20.11 kubeconfig > kubeconfig
 export KUBECONFIG=$PWD/kubeconfig
 ```
 
-The talosconfig is gitignored and removed by `terraform destroy` (disable it with
-`-var write_talosconfig=false`). See [Client configs](#client-configs) for how to
-regenerate it after a teardown.
+**The first bootstrap may need a second `terraform apply`.** `talos_cluster` completes
+as soon as the Talos layer is healthy (etcd/apid/kubelet), which can be before
+kube-apiserver and the Layer2 VIP are serving. The first Kubernetes API call (the
+node inventory used by the health gate) can therefore fail with
+`dial tcp <vip>:6443: connect: connection refused`. Re-running `apply` continues from
+there — there is deliberately no sleep or `local-exec` workaround. This is tracked in
+[siderolabs/terraform-provider-talos#221](https://github.com/siderolabs/terraform-provider-talos/issues/221);
+a control-plane-only health mode will remove both the inventory and the second apply.
+See [Client configs](#client-configs) for how to get/regenerate the configs.
 
 ---
 
@@ -405,9 +411,9 @@ terraform state rm $(terraform state list)
 
 ### Client configs
 
-**talosconfig** — written automatically to `./talosconfig` (0600) on every apply by a
-`local_sensitive_file` resource (flag `write_talosconfig`, default `true`) and removed
-by `terraform destroy`. It is also a regular Terraform output:
+**talosconfig** — opt-in: with `-var write_talosconfig=true` it is written to
+`./talosconfig` (0600) on apply by a `local_sensitive_file` resource and removed by
+`terraform destroy` (default `false`). It is also a regular Terraform output:
 
 ```bash
 terraform output -raw talosconfig > talosconfig
