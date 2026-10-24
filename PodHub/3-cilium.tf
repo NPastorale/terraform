@@ -68,4 +68,7 @@ resource "helm_release" "cilium" {
     name  = "securityContext.capabilities.cleanCiliumState"
     value = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
   }]
+  lifecycle {
+    ignore_changes = all
+  }
 }

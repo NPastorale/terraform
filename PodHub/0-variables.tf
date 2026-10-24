@@ -31,8 +31,18 @@ variable "cluster_endpoint_port" {
 }
 
 variable "talos_version" {
-  description = "The version of talos features to use"
+  description = "Talos machine-config *contract* version. Pin this to the Talos version the cluster was created with and do NOT bump it during OS upgrades; it only defines which config schema/defaults are generated. See talos_machine_configuration.talos_version in the provider docs."
   type        = string
+}
+
+variable "talos_installer_version" {
+  description = "Talos OS version to install / upgrade to. Drives the installer image tag and the Image Factory lookups. This is the knob you bump for Talos OS upgrades (and the only one, for patch releases)."
+  type        = string
+
+  validation {
+    condition     = can(regex("^v?[0-9]+\\.[0-9]+\\.[0-9]+$", var.talos_installer_version))
+    error_message = "talos_installer_version must look like v1.14.4."
+  }
 }
 
 variable "kubernetes_version" {
@@ -40,8 +50,26 @@ variable "kubernetes_version" {
   type        = string
 }
 
+variable "drain_on_upgrade" {
+  description = "Cordon and drain a node before rebooting it for a Talos OS upgrade (config-only changes never drain). Requires a reachable Kubernetes API. Set to false only when the API is unavailable and Talos still has to be upgraded."
+  type        = bool
+  default     = true
+}
+
+variable "write_talosconfig" {
+  description = "Write the generated talosconfig to <module>/talosconfig on apply (mode 0600). The file is removed again by terraform destroy; regenerate it from secrets.yaml if needed."
+  type        = bool
+  default     = false
+}
+
+variable "healthcheck_enabled" {
+  description = "Enable the Talos health gate that waits for the control plane before installing Cilium. Set to false only as an emergency escape hatch: it skips the gate and the Kubernetes node inventory, which lets you plan/apply against, or destroy, a cluster whose control plane is unhealthy."
+  type        = bool
+  default     = true
+}
+
 variable "nodes" {
-  description = "All cluster nodes unified. Role determines patches, architecture determines image schematic. Set manual=true to only generate machine config (outputs) without provisioning via talos_machine / cluster bootstrap / health checks."
+  description = "All cluster nodes unified. Role determines patches, architecture determines image schematic. Set manual=true to only generate machine config (outputs) without provisioning via talos_machine / cluster bootstrap / health checks. protected=true additionally guarantees Terraform never applies config to the node, never resets/wipes it, and never destroys it (requires manual=true)."
   type = map(object({
     role         = string
     architecture = string
@@ -50,11 +78,17 @@ variable "nodes" {
     labels       = optional(map(string), {})
     taints       = optional(map(string), {})
     manual       = optional(bool, false)
+    protected    = optional(bool, false)
   }))
 
   validation {
-    condition     = length([for k, v in var.nodes : k if v.role == "controlplane" && coalesce(v.manual, false) == false]) > 0
+    condition     = length([for k, v in var.nodes : k if v.role == "controlplane" && coalesce(v.manual, false) == false && coalesce(v.protected, false) == false]) > 0
     error_message = "At least one controlplane node with manual=false is required to bootstrap the cluster (first_controlplane_ip)."
+  }
+
+  validation {
+    condition     = alltrue([for k, v in var.nodes : !coalesce(v.protected, false) || coalesce(v.manual, false)])
+    error_message = "protected = true requires manual = true. A protected node must never be applied, reset or wiped by Terraform (e.g. the ARG nodes, which have no physical access)."
   }
 }
 

@@ -4,11 +4,20 @@ output "talosconfig" {
   sensitive = true
 }
 
-# Dumps the admin kubeconfig for kubectl / CI access to the cluster.
-output "kubeconfig" {
-  value     = talos_cluster_kubeconfig.this.kubeconfig_raw
-  sensitive = true
+# Writes the same talosconfig to <module>/talosconfig (0600) on apply, so operators
+# and CI do not need a manual `terraform output -raw talosconfig > talosconfig`.
+# Disable with `-var write_talosconfig=false`. The file is removed on destroy.
+resource "local_sensitive_file" "talosconfig" {
+  count           = var.write_talosconfig ? 1 : 0
+  content         = data.talos_client_configuration.talosconfig.talos_config
+  filename        = "${path.module}/talosconfig"
+  file_permission = "0600"
 }
+
+# There is intentionally no `kubeconfig` output: the admin kubeconfig is an ephemeral
+# value (it feeds the providers and the drain logic and never reaches state), and
+# Terraform forbids ephemeral outputs in a root module. Generate it on demand with
+#   talosctl --talosconfig ./talosconfig -n 10.10.20.11 kubeconfig > kubeconfig
 
 # Exposes the rendered auto-provisioned control-plane machine configurations (for audit/debug).
 output "controlplane_configs" {

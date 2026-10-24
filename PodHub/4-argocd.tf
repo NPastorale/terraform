@@ -2,7 +2,7 @@
 # Lua hook makes ArgoCD report Application health properly. create_namespace
 # makes the argocd namespace automatically. ignore_changes avoids Helm churn.
 resource "helm_release" "argocd" {
-  depends_on       = [ephemeral.talos_cluster_health.kubernetes]
+  depends_on       = [helm_release.cilium]
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
   version          = "10.11.1"

@@ -73,7 +73,7 @@ locals {
 # Resolve overlays once per architecture that needs one
 data "talos_image_factory_overlays_versions" "this" {
   for_each      = toset([for k, v in local.schematics : v.overlay if v.overlay != null])
-  talos_version = var.talos_version
+  talos_version = var.talos_installer_version
   filters = {
     name = each.key
   }
@@ -82,7 +82,7 @@ data "talos_image_factory_overlays_versions" "this" {
 # Resolve extension versions for combinations that have extensions
 data "talos_image_factory_extensions_versions" "this" {
   for_each      = { for k, v in local.schematics : k => v if length(v.extensions) > 0 }
-  talos_version = var.talos_version
+  talos_version = var.talos_installer_version
   exact_filters = {
     names = each.value.extensions
   }

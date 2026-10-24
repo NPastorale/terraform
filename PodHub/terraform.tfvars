@@ -4,10 +4,17 @@ cluster_name = "PodHub"
 cluster_endpoint_host = "10.10.20.15"
 cluster_vip_ip        = "10.10.20.15"
 cluster_vip_link      = "end0"
-# Talos OS version all nodes are installed with (must match installer images).
+# Machine-config CONTRACT version: the schema/defaults used to render machine
+# configs. Pin it to the version the cluster was created with; do not bump it
+# for OS upgrades. Only bump it deliberately (e.g. when moving to a new Talos
+# minor) as a separate apply.
 talos_version = "v1.14.1"
-# Kubernetes version Talos will boot (must be compatible with talos_version).
-kubernetes_version = "v1.37.0"
+# Talos OS version installed on / upgraded to. Bump this for Talos upgrades.
+# Must exist on the Image Factory for the chosen schematics/extensions.
+talos_installer_version = "v1.14.2"
+# Kubernetes version Talos will boot (must be compatible with the Talos version;
+# Talos 1.14 supports Kubernetes 1.33 - 1.37).
+kubernetes_version = "v1.37.1"
 
 # The set of physical/virtual nodes. Keyed by IP; each entry picks its role
 # (controlplane/worker), architecture (selects the Image Factory schematic),
@@ -69,6 +76,8 @@ nodes = {
     disk         = "/dev/mmcblk0"
     hostname     = "chaotic-underling-1"
     manual       = true
+    protected    = true # NO physical access: Terraform must never apply config to,
+    # reset, wipe or destroy this node. It rejoins via KubeSpan.
     labels = {
       "topology.kubernetes.io/region" = "ARG"
       "topology.kubernetes.io/zone"   = "CABA"
@@ -80,6 +89,8 @@ nodes = {
     disk         = "/dev/mmcblk0"
     hostname     = "macabre-underling-1"
     manual       = true
+    protected    = true # NO physical access: Terraform must never apply config to,
+    # reset, wipe or destroy this node. It rejoins via KubeSpan.
     labels = {
       "topology.kubernetes.io/region" = "ARG"
       "topology.kubernetes.io/zone"   = "Rosario"

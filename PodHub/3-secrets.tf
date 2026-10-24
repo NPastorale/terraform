@@ -1,7 +1,7 @@
 # Creates the "vault" namespace that holds Vault-related secrets.
 # ignore_changes keeps it stable across applies once created.
 resource "kubernetes_namespace_v1" "vault" {
-  depends_on = [ephemeral.talos_cluster_health.kubernetes]
+  depends_on = [helm_release.cilium]
   metadata {
     name = "vault"
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace_v1" "vault" {
 
 # Creates the "external-secrets" namespace for the External Secrets Operator + token.
 resource "kubernetes_namespace_v1" "external_secrets" {
-  depends_on = [ephemeral.talos_cluster_health.kubernetes]
+  depends_on = [helm_release.cilium]
   metadata {
     name = "external-secrets"
   }

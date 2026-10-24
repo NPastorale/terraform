@@ -30,17 +30,22 @@ terraform {
       source  = "argoproj-labs/argocd"
       version = "7.17.2"
     }
+    local = {
+      source  = "hashicorp/local"
+      version = "2.6.2"
+    }
   }
 }
 
-# Helm provider pointed at the freshly bootstrapped cluster. It reuses the
-# decoded kubeconfig (local.kubernetes_client_config) so Helm can talk to the API.
+# Helm provider pointed at the cluster. It reuses the decoded kubeconfig
+# (local.kubernetes_client_config, generated from the machine secrets) so Helm can
+# talk to the API.
 provider "helm" {
   kubernetes = local.kubernetes_client_config
 }
 
 # Kubernetes provider used by the kubernetes_* resources (namespaces, secrets).
-# Credentials are taken from the Talos-issued kubeconfig, decoded into plain PEM.
+# Credentials are taken from the generated admin kubeconfig, decoded into plain PEM.
 provider "kubernetes" {
   host                   = local.kubernetes_client_config.host
   cluster_ca_certificate = local.kubernetes_client_config.cluster_ca_certificate
