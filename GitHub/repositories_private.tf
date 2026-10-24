@@ -16,3 +16,9 @@ module "go" {
   repository_name = "go"
   visibility      = "private"
 }
+
+module "helm-chart" {
+  source          = "./modules/repository"
+  repository_name = "helm-chart"
+  visibility      = "private"
+}
