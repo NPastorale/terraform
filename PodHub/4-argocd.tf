@@ -12,6 +12,9 @@ resource "helm_release" "argocd" {
   timeout          = 1800
   values = [
     yamlencode({
+      crds = {
+        keep = false
+      }
       configs = {
         cm = {
           "resource.customizations.health.argoproj.io_Application" = <<-EOT

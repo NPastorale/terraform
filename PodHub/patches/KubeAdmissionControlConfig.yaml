@@ -1,7 +1,11 @@
+# Explicitly allow privileged pods. The generated config defaults to
+# `defaults.enforce: baseline`, which rejects privileged workloads; setting
+# `privileged` is intentional (do not "optimize" it back to baseline unless you
+# have audited every workload). `enforce-version` stays at the generated `latest`,
+# and the generated `audit`/`warn` defaults are preserved by the merge.
 apiVersion: v1alpha1
 kind: KubeAdmissionControlConfig
 name: PodSecurity
 configuration:
   defaults:
-    enforce:
-      $patch: delete
+    enforce: privileged

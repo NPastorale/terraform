@@ -33,19 +33,19 @@ The project is **phase-separated** and uses **programmatic decision-making** via
 
 ### File Structure
 
-| File                | Phase            | Responsibility                                                                                                                                                              |
-| :------------------ | :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0-terraform.tf`    | Base             | `terraform {}` block + `required_providers`.                                                                                                                                |
-| `0-variables.tf`    | Base             | Input variable definitions (`var.nodes`, versions, endpoint).                                                                                                               |
-| `1-factory.tf`      | **Info Phase**   | Image Factory API lookups + schematic definitions (per architecture × role).                                                                                                |
-| `1-certs-cilium.tf` | **Info Phase**   | TLS CA + certificates for Cilium Hubble. No cluster dependencies.                                                                                                           |
-| `1-cluster-info.tf` | **Info Phase**   | Secrets + machine config data source (for outputs) and ephemeral variant (for `talos_machine`) + **patch composition logic in locals**.                                     |
-| `2-cluster.tf`      | **Action Phase** | `talos_machine.all`, `talos_cluster.this` (bootstrap), ephemeral admin kubeconfig, health gate. Defines `local.kubernetes_client_config` for providers.                       |
-| `3-cilium.tf`       | **Apps Phase**   | Helm release for Cilium CNI. Depends on the Talos health gate.                                                                                                              |
-| `3-secrets.tf`      | **Apps Phase**   | Kubernetes namespaces and secrets (Vault, External Secrets).                                                                                                                |
-| `4-argocd.tf`       | **Apps Phase**   | Helm release for ArgoCD + `data.kubernetes_secret_v1.argocd_admin`.                                                                                                         |
-| `9-outputs.tf`      | Last             | Outputs (talosconfig, node configs, secrets yaml) + writes `./talosconfig` (flag `write_talosconfig`).                                                                       |
-| `terraform.tfvars`  | -                | User-provided values (`var.nodes`, versions, endpoint).                                                                                                                     |
+| File                | Phase            | Responsibility                                                                                                                                          |
+| :------------------ | :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `0-terraform.tf`    | Base             | `terraform {}` block + `required_providers`.                                                                                                            |
+| `0-variables.tf`    | Base             | Input variable definitions (`var.nodes`, versions, endpoint).                                                                                           |
+| `1-factory.tf`      | **Info Phase**   | Image Factory API lookups + schematic definitions (per architecture × role).                                                                            |
+| `1-certs-cilium.tf` | **Info Phase**   | TLS CA + certificates for Cilium Hubble. No cluster dependencies.                                                                                       |
+| `1-cluster-info.tf` | **Info Phase**   | Secrets + machine config data source (for outputs) and ephemeral variant (for `talos_machine`) + **patch composition logic in locals**.                 |
+| `2-cluster.tf`      | **Action Phase** | `talos_machine.all`, `talos_cluster.this` (bootstrap), ephemeral admin kubeconfig, health gate. Defines `local.kubernetes_client_config` for providers. |
+| `3-cilium.tf`       | **Apps Phase**   | Helm release for Cilium CNI. Depends on the Talos health gate.                                                                                          |
+| `3-secrets.tf`      | **Apps Phase**   | Kubernetes namespaces and secrets (Vault, External Secrets).                                                                                            |
+| `4-argocd.tf`       | **Apps Phase**   | Helm release for ArgoCD + `data.kubernetes_secret_v1.argocd_admin`.                                                                                     |
+| `9-outputs.tf`      | Last             | Outputs (talosconfig, node configs, secrets yaml) + writes `./talosconfig` (flag `write_talosconfig`).                                                  |
+| `terraform.tfvars`  | -                | User-provided values (`var.nodes`, versions, endpoint).                                                                                                 |
 
 ---
 
@@ -70,15 +70,15 @@ nodes = {
 }
 ```
 
-| Attribute      | Determines                                                                                                                                            |
-| :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `role`         | Machine type; control planes get the extra patches (admission control, no flannel, no kube-proxy, etcd metrics, Layer2 VIP).                           |
-| `architecture` | Image Factory schematic (`<architecture>-<role>`), which selects extensions and overlay (RPi).                                                         |
-| `hostname`     | Talos hostname **and** the Kubernetes Node name. Used to correlate nodes with the Kubernetes API (see health gates).                                   |
-| `manual`       | Excludes the node from `talos_machine` (no apply/bootstrap/health gating). Its config is exposed via `terraform output manual_configs` for manual `talosctl apply-config`. |
+| Attribute      | Determines                                                                                                                                                                                                       |
+| :------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `role`         | Machine type; control planes get the extra patches (admission control, no flannel, no kube-proxy, etcd metrics, Layer2 VIP).                                                                                     |
+| `architecture` | Image Factory schematic (`<architecture>-<role>`), which selects extensions and overlay (RPi).                                                                                                                   |
+| `hostname`     | Talos hostname **and** the Kubernetes Node name. Used to correlate nodes with the Kubernetes API (see health gates).                                                                                             |
+| `manual`       | Excludes the node from `talos_machine` (no apply/bootstrap/health gating). Its config is exposed via `terraform output manual_configs` for manual `talosctl apply-config`.                                       |
 | `protected`    | Hard guarantee: requires `manual = true`, and defensively keeps the node out of `talos_machine` even if `manual` is accidentally dropped. Terraform will never apply config to it, reset/wipe it, or destroy it. |
-| `labels`       | `KubeNodeConfig` labels.                                                                                                                              |
-| `taints`       | `KubeNodeConfig` taints, workers only.                                                                                                                |
+| `labels`       | `KubeNodeConfig` labels.                                                                                                                                                                                         |
+| `taints`       | `KubeNodeConfig` taints, workers only.                                                                                                                                                                           |
 
 ### Protected nodes (the ARG machines)
 
@@ -97,17 +97,32 @@ They rejoin a rebuilt cluster over KubeSpan as long as the cluster identity (the
 reset` against them**, and keep a copy of `secrets.yaml` outside Terraform (see
 [Destroy and rebuild](#destroy-and-rebuild)).
 
+### Configuration patches and templates
+
+| File                                           | Applied to             | Purpose                                                                                                                          |
+| :--------------------------------------------- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `patches/KubeSpanConfig.yaml`                  | all nodes              | KubeSpan mesh (also used for the protected ARG nodes).                                                                           |
+| `patches/RegistryMirrorConfig.yaml`            | auto-provisioned nodes | Registry mirrors (manual/ARG nodes cannot reach the local mirror).                                                               |
+| `patches/KubeAdmissionControlConfig.yaml`      | control planes         | PodSecurity: explicit `defaults.enforce: privileged` (generated default is `baseline`).                                          |
+| `patches/KubeFlannelCNIConfig.yaml`            | control planes         | Deletes flannel; Cilium is the CNI.                                                                                              |
+| `patches/KubeProxyConfig.yaml`                 | control planes         | Disables kube-proxy; Cilium replaces it.                                                                                         |
+| `patches/etcdMetrics.yaml`                     | control planes         | etcd `listen-metrics-urls`. As of Talos 1.14 there is **no** etcd extraArgs document, so this stays in the `cluster.etcd` block. |
+| `templates/HostnameConfig.yaml.tftpl`          | every node             | Static hostname (also the Kubernetes Node name).                                                                                 |
+| `templates/KubeNodeConfig.yaml.tftpl`          | every node             | Node labels/taints (replaces the deprecated `machine.nodeLabels` / `machine.nodeTaints`).                                        |
+| `templates/Layer2VIPConfig.yaml.tftpl`         | control planes         | API VIP; `link` is required in the 1.14 schema.                                                                                  |
+| `templates/UnattendedInstallConfig.yaml.tftpl` | every node             | Installer image and disk (replaces the deprecated `machine.install`; overrides the provider default `/dev/sda`).                 |
+
 ---
 
 ## Version Management
 
 There are **three independent version knobs**, and they should not be bumped together:
 
-| Variable                  | What it controls                                                                 | When to bump |
-| :------------------------ | :------------------------------------------------------------------------------- | :----------- |
+| Variable                  | What it controls                                                                                                                  | When to bump                                                      |
+| :------------------------ | :-------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------- |
 | `talos_version`           | Machine-config **contract** (`talos_machine_configuration` + `talos_machine_secrets`). Defines schema/defaults of generated YAML. | Almost never. Pin it to the version the cluster was created with. |
-| `talos_installer_version` | Installed Talos OS (`talos_machine.image`, Image Factory lookups).               | Every Talos OS upgrade (patch or minor). |
-| `kubernetes_version`      | Components bootstrapped by Talos and driven by `talos_cluster` (`upgrade-k8s`).   | Every Kubernetes upgrade. |
+| `talos_installer_version` | Installed Talos OS (`talos_machine.image`, Image Factory lookups).                                                                | Every Talos OS upgrade (patch or minor).                          |
+| `kubernetes_version`      | Components bootstrapped by Talos and driven by `talos_cluster` (`upgrade-k8s`).                                                   | Every Kubernetes upgrade.                                         |
 
 This is exactly what the provider recommends: `talos_machine_configuration.talos_version` is a
 config-generation contract, **not** the installed version; `image` is what upgrades.
@@ -219,7 +234,7 @@ a plan needs a reachable API — which it already needed for the
 
 **Emergency escape hatch.** If the control plane/etcd is broken (a dead control plane
 still listed as an etcd member, no leader, etc.) the gate will fail and block even a
-`destroy`. Set `healthcheck_enabled = false` to skip the gate *and* the Kubernetes
+`destroy`. Set `healthcheck_enabled = false` to skip the gate _and_ the Kubernetes
 node inventory:
 
 ```bash
@@ -230,7 +245,7 @@ It mutates nothing by itself; leave it at the default (`true`) for normal runs.
 
 > **Why there is no "kubernetes" health gate anymore.** Talos's
 > `DefaultClusterChecks()` asserts that the expected node set matches the cluster
-> *exactly* (`K8sAllNodesReportedAssertion`): leaving workers out fails with
+> _exactly_ (`K8sAllNodesReportedAssertion`): leaving workers out fails with
 > `unexpected nodes with IPs [...]`, and listing a node that has not been created
 > yet blocks until the timeout. There is no partial list that works, and listing the
 > manual/remote workers would let them gate every apply. API readiness is covered by
@@ -346,7 +361,7 @@ is a no-op), then each `talos_machine` with a **reset + wipe + reboot**.
   exists). The kubeconfig is not managed by Terraform, so delete it yourself if you
   want. `secrets.yaml` is not touched — see the next point.
 - **Keep the cluster identity if you want the ARG nodes back.** `terraform destroy`
-  destroys `talos_machine_secrets` too, so save the secrets *before* destroying and
+  destroys `talos_machine_secrets` too, so save the secrets _before_ destroying and
   re-import them when you rebuild:
 
   ```bash
@@ -447,7 +462,7 @@ talosctl apply-config -n 192.168.0.100 --file /tmp/machine.yaml
 
 ### Check the cluster health manually
 
-List **all** nodes (control planes *and* workers), otherwise the `K8sAllNodesReported`
+List **all** nodes (control planes _and_ workers), otherwise the `K8sAllNodesReported`
 assertion reports the missing ones as unexpected:
 
 ```bash

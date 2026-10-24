@@ -1,3 +1,12 @@
+# etcd extra arguments.
+#
+# As of Talos 1.14 (and current main) there is no dedicated etcd configuration
+# document for extraArgs: the only documented location is the `cluster.etcd` block
+# below (`KubeEtcdEncryptionConfig` only covers encryption at rest). Keep this shape
+# for now; if a future Talos release adds a document form, migrate then.
+#
+# Metrics are exposed unauthenticated on all interfaces. Make sure port 2381 is not
+# reachable from outside the cluster network.
 cluster:
   etcd:
     extraArgs:
