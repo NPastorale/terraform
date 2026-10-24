@@ -4,8 +4,8 @@
 # have audited every workload). `enforce-version` stays at the generated `latest`,
 # and the generated `audit`/`warn` defaults are preserved by the merge.
 apiVersion: v1alpha1
-kind: KubeAdmissionControlConfig
-name: PodSecurity
 configuration:
   defaults:
     enforce: privileged
+kind: KubeAdmissionControlConfig
+name: PodSecurity

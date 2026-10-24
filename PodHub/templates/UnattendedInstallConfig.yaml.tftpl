@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
-kind: UnattendedInstallConfig
 installer:
   image: ${image}
+kind: UnattendedInstallConfig
 provisioning:
   diskSelector:
     match: 'disk.dev_path == "${disk}"'
