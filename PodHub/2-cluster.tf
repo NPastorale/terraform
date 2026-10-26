@@ -14,11 +14,20 @@
 # only runs on image changes, never on config-only updates. The kubeconfig comes from
 # the ephemeral resource below, which is generated locally from the machine secrets,
 # so it also works on the very first bootstrap (no cluster access required).
+#
+# CAVEAT (provider 0.12.0): on a from-scratch Create the provider applies the config
+# and then still runs its upgrade path when the running (maintenance) Talos version
+# differs from `image`. With drain_on_upgrade=true it tries to cordon/drain through
+# the kubeconfig, but the cluster does not exist yet, so the create fails with
+# "draining node: ... connect: network is unreachable". When the first apply also
+# bumps `talos_installer_version`, run it with `-var drain_on_upgrade=false`; the
+# upgrade itself still happens, only the drain is skipped. Later applies never drain
+# unless `image` changes.
 resource "talos_machine" "all" {
   for_each                        = local.auto_nodes
   node                            = each.key
   client_configuration            = talos_machine_secrets.secrets.client_configuration
-  machine_configuration_wo        = ephemeral.talos_machine_configuration.auto[each.key].machine_configuration
+  machine_configuration_wo        = ephemeral.talos_machine_configuration.managed[each.key].machine_configuration
   image                           = local.node_image[each.key]
   drain_on_upgrade                = var.drain_on_upgrade
   kubeconfig_wo                   = ephemeral.talos_cluster_kubeconfig.this.kubeconfig_raw
@@ -35,6 +44,39 @@ resource "talos_machine" "all" {
     graceful = each.value.role != "controlplane"
     reboot   = true
     reset    = true
+  }
+}
+
+# Protected nodes (the remote ARG workers) are managed for config and OS upgrades, but
+# must never be reset. on_destroy.reset = false makes the provider's Delete a no-op:
+# `terraform destroy` only removes them from state (no STATE/EPHEMERAL wipe, no reboot).
+# They are re-adopted by a targeted apply if they are ever dropped from state:
+#   terraform apply -target='talos_machine.protected'
+# drain_on_upgrade is false: these nodes may not have rejoined the cluster yet when the
+# provider runs its create/adoption path, and a failed drain would abort the upgrade.
+# Drain them manually (kubectl drain) before a planned upgrade if desired.
+#
+# The ARG nodes are only reachable over KubeSpan from the control planes, not from the
+# machine running Terraform. Connect to the cluster endpoint (the VIP) and let apid
+# proxy the request to `node` over the mesh; `node` stays the node's own IP.
+resource "talos_machine" "protected" {
+  for_each = local.protected_nodes
+
+  depends_on = [talos_cluster.this]
+
+  node                            = each.key
+  endpoint                        = var.cluster_endpoint_host
+  client_configuration            = talos_machine_secrets.secrets.client_configuration
+  machine_configuration_wo        = ephemeral.talos_machine_configuration.managed[each.key].machine_configuration
+  image                           = local.node_image[each.key]
+  kubeconfig_wo                   = ephemeral.talos_cluster_kubeconfig.this.kubeconfig_raw
+  drain_on_upgrade                = false
+  ignore_kubernetes_upgrade_drift = true
+
+  on_destroy = {
+    reset    = false
+    reboot   = false
+    graceful = false
   }
 }
 

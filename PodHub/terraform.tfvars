@@ -8,10 +8,10 @@ cluster_vip_link      = "end0"
 # configs. Pin it to the version the cluster was created with; do not bump it
 # for OS upgrades. Only bump it deliberately (e.g. when moving to a new Talos
 # minor) as a separate apply.
-talos_version = "v1.14.1"
+talos_version = "v1.14.4"
 # Talos OS version installed on / upgraded to. Bump this for Talos upgrades.
 # Must exist on the Image Factory for the chosen schematics/extensions.
-talos_installer_version = "v1.14.2"
+talos_installer_version = "v1.14.4"
 # Kubernetes version Talos will boot (must be compatible with the Talos version;
 # Talos 1.14 supports Kubernetes 1.33 - 1.37).
 kubernetes_version = "v1.37.1"
@@ -82,6 +82,9 @@ nodes = {
       "topology.kubernetes.io/region" = "ARG"
       "topology.kubernetes.io/zone"   = "CABA"
     }
+    taints = {
+      "topology.kubernetes.io/region" = "ARG:NoSchedule"
+    }
   }
   "192.168.1.5" = {
     role         = "worker"
@@ -94,6 +97,9 @@ nodes = {
     labels = {
       "topology.kubernetes.io/region" = "ARG"
       "topology.kubernetes.io/zone"   = "Rosario"
+    }
+    taints = {
+      "topology.kubernetes.io/region" = "ARG:NoSchedule"
     }
   }
 }

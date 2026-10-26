@@ -23,17 +23,17 @@ data "talos_machine_configuration" "this" {
   config_patches     = local.node_config_patches[each.key]
 }
 
-# Same generated configuration, but ephemeral. talos_machine consumes it through the
-# write-only `machine_configuration_wo` argument, so the YAML never reaches state and
-# a Kubernetes version bump (which only rewrites the component image tags inside the
-# YAML) does not show up as an in-place update on every machine.
+# Same generated configuration, but ephemeral. talos_machine (auto and protected)
+# consumes it through the write-only `machine_configuration_wo` argument, so the YAML
+# never reaches state and a Kubernetes version bump (which only rewrites the component
+# image tags inside the YAML) does not show up as an in-place update on every machine.
 #
 # This does not weaken drift detection: the provider compares the normalized
 # `machine_configuration_hash` on every plan, and `ignore_kubernetes_upgrade_drift`
 # strips the version tags from it, so only `talos_cluster` reports the upgrade while
 # any other config change (patches, labels, contract) still triggers an update.
-ephemeral "talos_machine_configuration" "auto" {
-  for_each           = local.auto_nodes
+ephemeral "talos_machine_configuration" "managed" {
+  for_each           = local.managed_nodes
   cluster_name       = var.cluster_name
   cluster_endpoint   = "https://${var.cluster_endpoint_host}:${var.cluster_endpoint_port}"
   machine_type       = each.value.role
@@ -120,16 +120,22 @@ locals {
   }
 
   # Split nodes by provisioning mode. data.talos_machine_configuration.this above
-  # still iterates over ALL var.nodes so manual nodes get rendered configs,
-  # but everything below that provisions or gates on a live cluster uses auto only.
-  # protected nodes are excluded defensively: even if `manual` were accidentally
-  # dropped, Terraform must never create a talos_machine (and therefore never reset
-  # or wipe) a node without physical access.
+  # still iterates over ALL var.nodes so manual nodes get rendered configs.
+  # auto_nodes is the bootstrap resource (talos_machine.all, which resets on destroy);
+  # protected nodes are excluded defensively so they can never end up there even if
+  # `manual` were accidentally dropped. They are managed by talos_machine.protected,
+  # whose Delete is a no-op.
   auto_nodes = {
     for ip, n in var.nodes : ip => n
     if coalesce(n.manual, false) == false && coalesce(n.protected, false) == false
   }
   manual_nodes = { for ip, n in var.nodes : ip => n if coalesce(n.manual, false) == true }
+
+  # Protected nodes are managed by talos_machine.protected (config + OS upgrades) but
+  # their Delete is a no-op, so they are never reset. They stay out of auto_nodes so
+  # they are not part of bootstrap or the health gate.
+  protected_nodes = { for ip, n in var.nodes : ip => n if coalesce(n.protected, false) == true }
+  managed_nodes   = merge(local.auto_nodes, local.protected_nodes)
 
   # Convenience lookups derived from auto_nodes — used by bootstrap, health checks, and iteration
   first_controlplane_ip = [for ip, n in local.auto_nodes : ip if n.role == "controlplane"][0]
