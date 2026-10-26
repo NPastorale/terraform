@@ -5,7 +5,7 @@ resource "helm_release" "argocd" {
   depends_on       = [helm_release.cilium]
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
-  version          = "10.11.1"
+  version          = "10.11.3"
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
