@@ -4,7 +4,7 @@
 resource "helm_release" "cilium" {
   depends_on = [ephemeral.talos_cluster_health.talos]
   name       = "cilium"
-  repository = "https://helm.cilium.io/"
+  repository = "oci://quay.io/cilium/charts"
   version    = "1.20.4"
   chart      = "cilium"
   namespace  = "kube-system"
