@@ -69,7 +69,7 @@ variable "healthcheck_enabled" {
 }
 
 variable "nodes" {
-  description = "All cluster nodes unified. Role determines patches, architecture determines image schematic. Set manual=true to only generate machine config (outputs) without provisioning via talos_machine / cluster bootstrap / health checks. protected=true additionally guarantees Terraform never applies config to the node, never resets/wipes it, and never destroys it (requires manual=true)."
+  description = "All cluster nodes unified. Role determines patches, architecture determines image schematic. Set manual=true to only generate machine config (outputs) without provisioning via talos_machine.all / cluster bootstrap / health checks. protected=true (requires manual=true) manages the node with talos_machine.protected for config and OS upgrades, but its Delete is a no-op: on destroy Terraform never resets, wipes or reboots it. Protected nodes are excluded from talos_machine.all, bootstrap and the health gate."
   type = map(object({
     role         = string
     architecture = string

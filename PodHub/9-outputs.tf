@@ -17,7 +17,7 @@ resource "local_sensitive_file" "talosconfig" {
 # There is intentionally no `kubeconfig` output: the admin kubeconfig is an ephemeral
 # value (it feeds the providers and the drain logic and never reaches state), and
 # Terraform forbids ephemeral outputs in a root module. Generate it on demand with
-#   talosctl --talosconfig ./talosconfig -n 10.10.20.11 kubeconfig > kubeconfig
+#   talosctl --talosconfig ./talosconfig -n 10.10.20.11 kubeconfig --merge=false - > kubeconfig
 
 # Exposes the rendered auto-provisioned control-plane machine configurations (for audit/debug).
 output "controlplane_configs" {

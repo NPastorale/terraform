@@ -146,12 +146,13 @@ locals {
   #   * a control plane being added is not registered yet -> not waited for at plan
   #     time, so scale-up no longer deadlocks;
   #   * a control plane being removed is still registered and still an etcd member ->
-  #     it stays in the list, so the plan passes and `on_destroy.graceful` can make it
-  #     leave etcd during the apply;
+  #     it stays in the list, so the plan passes. `on_destroy.graceful` is false for
+  #     control planes, so remove the etcd member manually during the scale-down;
   #   * workers (including the manual/remote ARG nodes) are never part of this list.
-  # A NotReady control plane is excluded: the etcd subset assertion then fails
-  # immediately (instead of hanging for the full timeout), which is the correct
-  # signal to remove the member before applying.
+  # A NotReady control plane is excluded (unless none are Ready, in which case the
+  # fallback below uses all auto-provisioned control planes): the etcd subset assertion
+  # then fails immediately (instead of hanging for the full timeout), which is the
+  # correct signal to remove the member before applying.
   controlplane_label = "node-role.kubernetes.io/control-plane"
 
   registered_controlplane_ips = flatten([
